@@ -3,6 +3,7 @@ import { useFamilyTree } from './hooks/useFamilyTree';
 import { FamilyTree } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
 import { Person } from './types';
+import { PasswordScreen } from './components/PasswordScreen';
 
 const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDate,bio
 1,John Doe,Male,,,2,https://ui-avatars.com/api/?name=John+Doe,1950-01-01,Founder of the Doe family.
@@ -16,6 +17,7 @@ const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDa
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
@@ -29,11 +31,15 @@ const App: React.FC = () => {
     setSelectedPerson(null);
   };
 
+  if (!isAuthenticated) {
+    return <PasswordScreen onSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="font-sans antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-white h-screen w-screen overflow-hidden flex flex-col">
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 className="text-xl font-bold">Generational Threads</h1>
+                <h1 className="text-xl font-bold">Kalpats Family Tree</h1>
             </div>
         </header>
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Generational Threads</title>
+    <title>Kalpats Family Tree</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -38,7 +38,7 @@
       }
 
       /* Vertical line FROM parent TO horizontal connector bar */
-      .tree ul::before {
+      .tree li > ul::before {
         content: '';
         position: absolute;
         top: 0;
@@ -48,12 +48,13 @@
         height: 40px;
         border-left: 2px solid #94a3b8; /* slate-400 */
       }
-      .dark .tree ul::before {
+      .dark .tree li > ul::before {
         border-color: #334155; /* slate-700 */
       }
 
-      /* Vertical line FROM horizontal connector bar TO child */
-      .tree li::before {
+      /* Vertical line FROM horizontal connector bar TO child.
+         Targets only LI elements that are descendants of other LIs. */
+      .tree ul ul li::before {
         content: '';
         position: absolute;
         top: 0;
@@ -63,12 +64,13 @@
         height: 40px;
         border-left: 2px solid #94a3b8; /* slate-400 */
       }
-      .dark .tree li::before {
+      .dark .tree ul ul li::before {
         border-color: #334155; /* slate-700 */
       }
 
-      /* Horizontal connector bar, spanning above the li */
-      .tree li::after {
+      /* Horizontal connector bar, spanning above the child li.
+         Targets only LI elements that are descendants of other LIs. */
+      .tree ul ul li::after {
         content: '';
         position: absolute;
         top: 0;
@@ -77,26 +79,26 @@
         height: 0;
         border-top: 2px solid #94a3b8; /* slate-400 */
       }
-      .dark .tree li::after {
+      .dark .tree ul ul li::after {
         border-color: #334155; /* slate-700 */
       }
 
-      /* --- Special Cases --- */
+      /* --- Special Cases for Child LIs --- */
 
       /* A single child doesn't get a horizontal bar */
-      .tree li:only-child::after {
+      .tree ul ul li:only-child::after {
         display: none;
       }
 
       /* First child's bar starts at the center and goes right */
-      .tree li:first-child::after {
+      .tree ul ul li:first-child::after {
         left: 50%;
         width: 50%;
         border-top-left-radius: 0.75rem; /* Slight downward elbow */
       }
 
       /* Last child's bar starts left and goes to the center */
-      .tree li:last-child::after {
+      .tree ul ul li:last-child::after {
         left: 0;
         width: 50%;
         border-top-right-radius: 0.75rem; /* Slight downward elbow */
