@@ -316,9 +316,9 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
       </div>
       
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
-            <button onClick={zoomIn} className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">+</button>
-            <button onClick={zoomOut} className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">-</button>
-            <button onClick={reset} className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-sm flex items-center justify-center">Reset</button>
+            <button onClick={zoomIn} title="Zoom In" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">+</button>
+            <button onClick={zoomOut} title="Zoom Out" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">-</button>
+            <button onClick={reset} title="Reset View" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-sm flex items-center justify-center">Reset</button>
       </div>
     </div>
   );

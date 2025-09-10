@@ -115,6 +115,7 @@ const App: React.FC = () => {
   
   const handleClearFocus = () => {
       setFocusedPersonId(null);
+      setSelectedPerson(null);
   };
   
   const handleExportPdf = async () => {
