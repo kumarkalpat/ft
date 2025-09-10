@@ -290,6 +290,7 @@ const App: React.FC = () => {
                     onFocusPerson={handleFocusToggle}
                     onShowDetails={handleShowDetails}
                     selectedPersonId={selectedPerson?.id}
+                    peopleMap={peopleMap}
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}
                 />

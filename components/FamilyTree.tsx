@@ -9,9 +9,10 @@ interface FamilyTreeProps {
   selectedPersonId?: string;
   highlightedIds: Set<string>;
   isInFocusMode: boolean;
+  peopleMap: Map<string, Person>;
 }
 
-export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode }) => {
+export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode, peopleMap }) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -21,6 +22,12 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
   // Refs for touch interactions
   const lastPanPosition = useRef<{ x: number, y: number } | null>(null);
   const lastPinchDistance = useRef<number | null>(null);
+  
+  // Refs for custom tap detection
+  const tapTimeoutRef = useRef<number | null>(null);
+  const lastTapInfoRef = useRef<{ personId: string; time: number } | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const hasMovedRef = useRef(false);
 
 
   const fitAndCenterTree = useCallback(() => {
@@ -130,21 +137,49 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
   
   // --- Touch Handlers ---
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    if (e.touches.length === 1) { // Pan
-      lastPanPosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      setIsPanning(true);
+    // A touch interaction is starting, so disable CSS transitions for smoothness.
+    setIsPanning(true);
+    
+    if (e.touches.length === 1) { // Pan or Tap
+      const touch = e.touches[0];
+      lastPanPosition.current = { x: touch.clientX, y: touch.clientY };
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY }; // For move detection
+      hasMovedRef.current = false;
     } else if (e.touches.length === 2) { // Pinch
+      e.preventDefault(); // Prevent browser default actions for pinch like page zoom
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY,
       );
       lastPinchDistance.current = dist;
+      lastPanPosition.current = null; // We are pinching, not panning
+      hasMovedRef.current = true; // A pinch is a move, cancel tap.
+      if (tapTimeoutRef.current) {
+          clearTimeout(tapTimeoutRef.current);
+          tapTimeoutRef.current = null;
+      }
     }
   };
   
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent default browser actions like scrolling/zooming when we are handling the gesture.
     e.preventDefault();
+
+    // If we move significantly, it's a drag/pinch, not a tap.
+    if (!hasMovedRef.current && touchStartPosRef.current && e.touches.length === 1) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchStartPosRef.current.x;
+        const dy = touch.clientY - touchStartPosRef.current.y;
+        if (Math.hypot(dx, dy) > 10) { // Threshold
+            hasMovedRef.current = true;
+            if (tapTimeoutRef.current) { // Cancel any pending single tap
+                clearTimeout(tapTimeoutRef.current);
+                tapTimeoutRef.current = null;
+                lastTapInfoRef.current = null;
+            }
+        }
+    }
+    
     // Panning with one finger
     if (e.touches.length === 1 && lastPanPosition.current) {
       const touch = e.touches[0];
@@ -176,11 +211,52 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    setIsPanning(false);
-    lastPanPosition.current = null;
-    lastPinchDistance.current = null;
+    // Check for tap/double-tap only if we haven't moved
+    if (!hasMovedRef.current) {
+      const targetElement = e.target as HTMLElement;
+      const personNode = targetElement.closest<HTMLElement>('[data-id]');
+      
+      if (personNode?.dataset.id) {
+        e.preventDefault(); // Prevent ghost clicks only if a valid target was tapped
+        const personId = personNode.dataset.id;
+        const person = peopleMap.get(personId);
+        
+        if (person) {
+            const now = Date.now();
+            const DOUBLE_TAP_DELAY = 300;
+            
+            if (lastTapInfoRef.current?.personId === personId && (now - lastTapInfoRef.current.time) < DOUBLE_TAP_DELAY) {
+                // Double tap
+                if(tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+                onShowDetails(person);
+                lastTapInfoRef.current = null;
+                tapTimeoutRef.current = null;
+            } else {
+                // Single tap
+                lastTapInfoRef.current = { personId, time: now };
+                tapTimeoutRef.current = window.setTimeout(() => {
+                    onFocusPerson(person);
+                    lastTapInfoRef.current = null;
+                }, DOUBLE_TAP_DELAY);
+            }
+        }
+      }
+    }
+    
+    // If one finger is lifted from a pinch, transition to panning with the remaining finger
+    if (e.touches.length === 1) {
+        lastPinchDistance.current = null;
+        lastPanPosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    
+    // If last finger is lifted, end the interaction state
+    if (e.touches.length === 0) {
+        setIsPanning(false);
+        lastPanPosition.current = null;
+        lastPinchDistance.current = null;
+    }
   };
+
 
   const zoomIn = () => setScale(s => Math.min(s * 1.2, 3));
   const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.2));
