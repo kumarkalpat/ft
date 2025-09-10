@@ -1,0 +1,5 @@
+{
+  "name": "Generational Threads: A Family Tree Explorer",
+  "description": "A modern, interactive family tree application that visualizes your ancestry from a Google Sheet. Easily navigate through generations, view details of family members, and explore your lineage with a clean and beautiful interface.",
+  "requestFramePermissions": []
+}
