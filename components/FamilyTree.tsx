@@ -50,7 +50,13 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     const padding = 80;
     const scaleX = (containerWidth - padding) / contentWidth;
     const scaleY = (containerHeight - padding) / contentHeight;
-    const newScale = Math.min(scaleX, scaleY, 1);
+    
+    // Calculate the scale needed to fit the whole tree.
+    const scaleToFit = Math.min(scaleX, scaleY);
+    
+    // Don't scale up past 100% for the initial fit, but ensure the tree isn't too small.
+    // Let's set a minimum scale of 0.75, so it's always reasonably large.
+    const newScale = Math.min(1, Math.max(scaleToFit, 0.75));
 
     const newX = (containerWidth - contentWidth * newScale) / 2;
     const newY = 20;
