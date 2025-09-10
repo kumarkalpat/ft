@@ -79,21 +79,35 @@ const App: React.FC = () => {
   }, [focusedPersonId, peopleMap]);
 
 
+  // Used for single-click actions from search or details panel
   const handleNodeClick = useCallback((person: Person) => {
-    // Always select the person to show their details
     const fullPerson = peopleMap.get(person.id);
     setSelectedPerson(fullPerson || null);
     setSearchQuery('');
-
-    // Toggle focus mode
-    if (focusedPersonId === person.id) {
-      // If clicking the already focused person, clear the focus
-      setFocusedPersonId(null);
-    } else {
-      // Otherwise, focus on the newly clicked person
+    if (focusedPersonId !== person.id) {
       setFocusedPersonId(person.id);
     }
   }, [focusedPersonId, peopleMap]);
+  
+  // Used for single-clicking nodes in the tree to toggle focus
+  const handleFocusToggle = useCallback((person: Person) => {
+    if (focusedPersonId === person.id) {
+        setFocusedPersonId(null);
+    } else {
+        setFocusedPersonId(person.id);
+    }
+  }, [focusedPersonId]);
+
+  // Used for double-clicking nodes in the tree to show details
+  const handleShowDetails = useCallback((person: Person) => {
+    const fullPerson = peopleMap.get(person.id);
+    setSelectedPerson(fullPerson || null);
+    // Also ensure focus when opening details
+    if (focusedPersonId !== person.id) {
+        setFocusedPersonId(person.id);
+    }
+  }, [peopleMap, focusedPersonId]);
+
 
   const handleCloseDetails = () => {
     setSelectedPerson(null);
@@ -160,21 +174,34 @@ const App: React.FC = () => {
     const focusedPerson = peopleMap.get(focusedPersonId);
     if (!focusedPerson) return [];
 
-    // Find immediate ancestors from the original map
+    // Recursively build a clean descendant tree from the main peopleMap.
+    // This ensures that we show all descendants (grandchildren and beyond)
+    // by using the fully-populated objects from the map.
+    const buildDescendantTree = (person: Person): Person => {
+      const fullChildren = person.children.map(child => {
+        const childFromMap = peopleMap.get(child.id)!;
+        return buildDescendantTree(childFromMap);
+      });
+      return { ...person, children: fullChildren };
+    };
+
+    const focusedPersonWithDescendants = buildDescendantTree(focusedPerson);
+
+    // Find immediate ancestors to create the context for the focused view.
     const father = focusedPerson.fatherID ? peopleMap.get(focusedPerson.fatherID) : undefined;
     const mother = focusedPerson.motherID ? peopleMap.get(focusedPerson.motherID) : undefined;
     
-    // If no ancestors are in the data, the focused person is the root of the view.
+    // If the focused person has no parents, they are the root of this view.
     if (!father && !mother) {
-        return [focusedPerson];
+        return [focusedPersonWithDescendants];
     }
 
-    // Create shallow clones of parents and set the focused person as their ONLY child.
-    // This constructs the new tree for the focused view without mutating the original data.
-    const fatherClone = father ? { ...father, children: [focusedPerson], spouse: undefined } : undefined;
-    const motherClone = mother ? { ...mother, children: [focusedPerson], spouse: undefined } : undefined;
+    // Create shallow clones of the parents to avoid mutating the original data.
+    // Set the focused person (with all their descendants) as the ONLY child to prune siblings.
+    const fatherClone = father ? { ...father, children: [focusedPersonWithDescendants], spouse: undefined } : undefined;
+    const motherClone = mother ? { ...mother, children: [focusedPersonWithDescendants], spouse: undefined } : undefined;
     
-    // Link the cloned parents to each other as spouses
+    // Link the cloned parents to each other as spouses.
     if (fatherClone && motherClone) {
         fatherClone.spouse = motherClone;
         motherClone.spouse = fatherClone;
@@ -260,7 +287,8 @@ const App: React.FC = () => {
             {!loading && !error && displayedRoots.length > 0 && (
                 <FamilyTree 
                     roots={displayedRoots} 
-                    onSelectPerson={handleNodeClick} 
+                    onFocusPerson={handleFocusToggle}
+                    onShowDetails={handleShowDetails}
                     selectedPersonId={selectedPerson?.id}
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}

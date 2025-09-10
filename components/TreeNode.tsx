@@ -4,7 +4,8 @@ import { SecureImage } from './SecureImage';
 
 interface TreeNodeProps {
   person: Person;
-  onSelectPerson: (person: Person) => void;
+  onFocusPerson: (person: Person) => void;
+  onShowDetails: (person: Person) => void;
   selectedPersonId?: string;
   highlightedIds: Set<string>;
   isInFocusMode: boolean;
@@ -22,7 +23,7 @@ const getAge = (birthDate?: string, deathDate?: string): string => {
   return age >= 0 ? `(${age})` : '';
 };
 
-export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, selectedPersonId, highlightedIds, isInFocusMode }) => {
+export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode }) => {
   const isSelected = person.id === selectedPersonId;
   const isSpouseSelected = person.spouse?.id === selectedPersonId;
 
@@ -39,7 +40,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
       {/* The person and their spouse */}
       <div className="flex items-center gap-4">
         <div
-          onClick={() => onSelectPerson(person)}
+          onClick={() => onFocusPerson(person)}
+          onDoubleClick={() => onShowDetails(person)}
           className={`
             p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
             ${isSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
@@ -70,7 +72,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
 
         {person.spouse && (
           <div
-            onClick={() => onSelectPerson(person.spouse!)}
+            onClick={() => onFocusPerson(person.spouse!)}
+            onDoubleClick={() => onShowDetails(person.spouse!)}
             className={`
               p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
               ${isSpouseSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
@@ -108,7 +111,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
             <TreeNode
               key={child.id}
               person={child}
-              onSelectPerson={onSelectPerson}
+              onFocusPerson={onFocusPerson}
+              onShowDetails={onShowDetails}
               selectedPersonId={selectedPersonId}
               highlightedIds={highlightedIds}
               isInFocusMode={isInFocusMode}
