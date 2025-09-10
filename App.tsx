@@ -1,8 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { FamilyTree } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
-import { LoginScreen } from './components/LoginScreen';
 import { Person } from './types';
 
 const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDate,bio
@@ -14,36 +13,12 @@ const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDa
 6,David Doe,Male,3,4,,,https://ui-avatars.com/api/?name=David+Doe,2000-06-25,Son of Peter and Mary.
 `;
 
-const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/your-sheet-id-here/export?format=csv';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
 
 const App: React.FC = () => {
-  const [sheetUrl, setSheetUrl] = useState<string | null>(null);
-  const [isLoadingApp, setIsLoadingApp] = useState(true);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
-  useEffect(() => {
-    const storedUrl = localStorage.getItem('sheetUrl');
-    setSheetUrl(storedUrl);
-    setIsLoadingApp(false);
-  }, []);
-
-  const { roots, peopleMap, loading, error } = useFamilyTree(sheetUrl ?? '', fallbackData);
-
-  const handleSetSheetUrl = (url: string) => {
-    if (url) {
-      localStorage.setItem('sheetUrl', url);
-    } else {
-      localStorage.removeItem('sheetUrl');
-    }
-    setSheetUrl(url);
-    setSelectedPerson(null);
-  };
-  
-  const handleLogout = () => {
-      localStorage.removeItem('sheetUrl');
-      setSheetUrl(null);
-      setSelectedPerson(null);
-  };
+  const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
 
   const handleSelectPerson = useCallback((person: Person) => {
     const fullPerson = peopleMap.get(person.id);
@@ -54,25 +29,11 @@ const App: React.FC = () => {
     setSelectedPerson(null);
   };
 
-  if (isLoadingApp) {
-      return <div className="h-screen w-screen bg-slate-50 dark:bg-slate-900" />;
-  }
-
-  if (sheetUrl === null) {
-      return <LoginScreen onSetSheetUrl={handleSetSheetUrl} initialUrl={DEFAULT_SHEET_URL} />;
-  }
-
   return (
     <div className="font-sans antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-white h-screen w-screen overflow-hidden flex flex-col">
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 className="text-xl font-bold">Family Tree Viewer</h1>
-                <button 
-                    onClick={handleLogout}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                    Change Sheet
-                </button>
+                <h1 className="text-xl font-bold">Generational Threads</h1>
             </div>
         </header>
 
@@ -103,7 +64,7 @@ const App: React.FC = () => {
                  <div className="absolute inset-0 flex items-center justify-center z-10 p-4">
                     <div className="text-center text-slate-500 dark:text-slate-400">
                         <p className="text-lg">No family data found.</p>
-                        <p className="text-sm">Please check your Google Sheet URL and ensure the data format is correct.</p>
+                        <p className="text-sm">Please check your Google Sheet and ensure the data format is correct.</p>
                     </div>
                 </div>
             )}

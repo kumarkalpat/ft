@@ -121,6 +121,17 @@ export const useFamilyTree = (sheetUrl: string, fallbackCsv: string) => {
       });
     });
 
+    // Sort children by birth date (oldest first)
+    peopleMap.forEach(person => {
+      if (person.children && person.children.length > 1) {
+        person.children.sort((a, b) => {
+          if (!a.birthDate) return 1; // People without birth dates go to the end
+          if (!b.birthDate) return -1;
+          return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
+        });
+      }
+    });
+
     const rootList: Person[] = [];
     peopleMap.forEach(person => {
       if (!nonRoots.has(person.id)) {
@@ -128,10 +139,20 @@ export const useFamilyTree = (sheetUrl: string, fallbackCsv: string) => {
       }
     });
     
+    // Filter out individuals who are spouses of someone already in the tree (a non-root)
+    const trueRootList = rootList.filter(person => {
+        // If a person's spouse is a child of another family, that person should not be a root.
+        // They will be displayed alongside their spouse within that family's branch.
+        if (person.spouse && nonRoots.has(person.spouse.id)) {
+            return false;
+        }
+        return true;
+    });
+
     // De-duplicate roots to avoid rendering the same family twice if both spouses are roots.
     const finalRoots: Person[] = [];
     const processedRoots = new Set<string>();
-    rootList.forEach(p => {
+    trueRootList.forEach(p => {
         if (processedRoots.has(p.id)) return;
         finalRoots.push(p);
         processedRoots.add(p.id);

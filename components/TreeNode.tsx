@@ -1,4 +1,3 @@
-// FIX: Created the TreeNode component which was missing. This component recursively renders a person, their spouse, and their children to build the family tree structure.
 import React from 'react';
 import { Person } from '../types';
 import { SecureImage } from './SecureImage';
@@ -9,20 +8,32 @@ interface TreeNodeProps {
   selectedPersonId?: string;
 }
 
+const getAge = (birthDate?: string, deathDate?: string): string => {
+  if (!birthDate) return '';
+  const start = new Date(birthDate);
+  const end = deathDate ? new Date(deathDate) : new Date();
+  let age = end.getFullYear() - start.getFullYear();
+  const m = end.getMonth() - start.getMonth();
+  if (m < 0 || (m === 0 && end.getDate() < start.getDate())) {
+    age--;
+  }
+  return age >= 0 ? `(${age})` : '';
+};
+
 export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, selectedPersonId }) => {
   const isSelected = person.id === selectedPersonId;
   const isSpouseSelected = person.spouse?.id === selectedPersonId;
 
   return (
-    // Container for a "family unit" (person/couple + their children)
-    <div className="flex flex-col items-center">
+    // Container for a "family unit". It's an `li` element to work with the CSS line styles.
+    <li className="flex flex-col items-center relative">
       
       {/* The person and their spouse */}
       <div className="flex items-center gap-4">
         <div
           onClick={() => onSelectPerson(person)}
           className={`
-            p-2 rounded-lg cursor-pointer transition-all w-32 flex flex-col items-center text-center
+            p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
             ${isSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
           `}
         >
@@ -32,16 +43,28 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
             alt={person.name}
             className="w-20 h-20 rounded-full object-cover"
           />
-          <p className="mt-2 font-semibold text-sm truncate w-full" title={person.name}>
-            {person.name}
-          </p>
+          <div className="mt-2 flex-grow flex flex-col justify-center">
+            <p className="font-semibold text-sm w-full" title={person.name}>
+              {person.name}
+            </p>
+            {person.alias && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic" title={person.alias}>
+                "{person.alias}"
+              </p>
+            )}
+            {person.birthDate && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {new Date(person.birthDate).getFullYear()} {getAge(person.birthDate, person.deathDate)}
+              </p>
+            )}
+          </div>
         </div>
 
         {person.spouse && (
           <div
             onClick={() => onSelectPerson(person.spouse!)}
             className={`
-              p-2 rounded-lg cursor-pointer transition-all w-32 flex flex-col items-center text-center
+              p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
               ${isSpouseSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
             `}
           >
@@ -51,16 +74,28 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
               alt={person.spouse.name}
               className="w-20 h-20 rounded-full object-cover"
             />
-            <p className="mt-2 font-semibold text-sm truncate w-full" title={person.spouse.name}>
-              {person.spouse.name}
-            </p>
+             <div className="mt-2 flex-grow flex flex-col justify-center">
+                <p className="font-semibold text-sm w-full" title={person.spouse.name}>
+                {person.spouse.name}
+                </p>
+                {person.spouse.alias && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic" title={person.spouse.alias}>
+                    "{person.spouse.alias}"
+                  </p>
+                )}
+                {person.spouse.birthDate && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {new Date(person.spouse.birthDate).getFullYear()} {getAge(person.spouse.birthDate, person.spouse.deathDate)}
+                </p>
+                )}
+            </div>
           </div>
         )}
       </div>
 
       {/* The children of the person/couple */}
       {person.children && person.children.length > 0 && (
-        <div className="flex justify-center items-start gap-8 pt-12">
+        <ul>
           {person.children.map((child) => (
             <TreeNode
               key={child.id}
@@ -69,8 +104,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
               selectedPersonId={selectedPersonId}
             />
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </li>
   );
 };

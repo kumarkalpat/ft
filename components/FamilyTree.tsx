@@ -81,7 +81,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, s
     >
       <div 
         ref={contentRef}
-        className="inline-flex"
+        className="inline-flex tree"
         style={{ 
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: 'top left',
@@ -89,11 +89,11 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, s
             transition: isPanning ? 'none' : 'transform 0.1s ease-out',
         }}
       >
-        <div className="flex justify-center items-start gap-16 p-16">
+        <ul className="flex justify-center items-start p-16">
             {roots.map(root => (
                 <TreeNode key={root.id} person={root} onSelectPerson={onSelectPerson} selectedPersonId={selectedPersonId} />
             ))}
-        </div>
+        </ul>
       </div>
       
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">

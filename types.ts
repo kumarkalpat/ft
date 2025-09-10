@@ -4,6 +4,8 @@ export interface Person {
   alias?: string;
   gender: 'Male' | 'Female' | 'Other';
   partnerId?: string;
+  fatherID?: string;
+  motherID?: string;
   parentsIds: string[];
   imageUrl?: string;
   birthDate?: string;
