@@ -10,9 +10,10 @@ interface FamilyTreeProps {
   highlightedIds: Set<string>;
   isInFocusMode: boolean;
   peopleMap: Map<string, Person>;
+  isSidebarVisible: boolean;
 }
 
-export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode, peopleMap }) => {
+export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible }) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -33,7 +34,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
   const fitAndCenterTree = useCallback(() => {
     if (!containerRef.current || !contentRef.current) return;
     
-    const containerWidth = containerRef.current.offsetWidth;
+    const isMobile = window.innerWidth < 768; // Tailwind's 'md' breakpoint
+    const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0; // w-96 is 24rem = 384px
+
+    const containerWidth = containerRef.current.offsetWidth - sidebarWidth;
     const containerHeight = containerRef.current.offsetHeight;
     const contentWidth = contentRef.current.scrollWidth;
     const contentHeight = contentRef.current.scrollHeight;
@@ -57,7 +61,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
 
     setScale(newScale);
     setPan({ x: newX, y: newY });
-  }, []);
+  }, [isSidebarVisible]);
 
   const panToPerson = useCallback((personId: string) => {
     if (!containerRef.current || !contentRef.current) return;
@@ -67,13 +71,17 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
 
     const container = containerRef.current;
     
+    const isMobile = window.innerWidth < 768;
+    const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0;
+    const availableWidth = container.offsetWidth - sidebarWidth;
+
     const newScale = 1.0;
-    const newX = (container.offsetWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
+    const newX = (availableWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
     const newY = (container.offsetHeight / 2) - (personNode.offsetTop + personNode.offsetHeight / 2) * newScale;
 
     setScale(newScale);
     setPan({ x: newX, y: newY });
-  }, []);
+  }, [isSidebarVisible]);
 
   useLayoutEffect(() => {
     if (roots.length > 0 && !isInFocusMode) {
@@ -272,6 +280,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     <div 
         ref={containerRef}
         className="w-full h-full bg-slate-100 dark:bg-slate-900/50 overflow-hidden relative select-none"
+        style={{ touchAction: 'none' }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}

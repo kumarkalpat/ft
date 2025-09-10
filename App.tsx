@@ -293,6 +293,7 @@ const App: React.FC = () => {
                     peopleMap={peopleMap}
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}
+                    isSidebarVisible={!!selectedPerson}
                 />
             )}
             {!loading && !error && displayedRoots.length === 0 && (
