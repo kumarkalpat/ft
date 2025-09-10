@@ -6,9 +6,11 @@ interface FamilyTreeProps {
   roots: Person[];
   onSelectPerson: (person: Person) => void;
   selectedPersonId?: string;
+  highlightedIds: Set<string>;
+  isInFocusMode: boolean;
 }
 
-export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, selectedPersonId }) => {
+export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, selectedPersonId, highlightedIds, isInFocusMode }) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -17,9 +19,7 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, s
 
   const fitAndCenterTree = useCallback(() => {
     if (!containerRef.current || !contentRef.current || contentRef.current.offsetWidth === 0) {
-      // If refs aren't ready or content has no width, try again shortly.
-      // This handles cases where the tree renders after the effect runs.
-      setTimeout(fitAndCenterTree, 100);
+      setTimeout(() => fitAndCenterTree(), 100);
       return;
     }
 
@@ -30,26 +30,45 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, s
 
     if (contentWidth === 0 || contentHeight === 0) return;
 
-    const padding = 80; // Add some padding around the tree
-
-    // Calculate the optimal scale to fit the content within the container
+    const padding = 80;
     const scaleX = (containerWidth - padding) / contentWidth;
     const scaleY = (containerHeight - padding) / contentHeight;
-    const newScale = Math.min(scaleX, scaleY, 1); // Cap at 1 to avoid zooming in on small trees
-
-    // Calculate the position to center the scaled content
+    const newScale = Math.min(scaleX, scaleY, 1);
     const newX = (containerWidth - contentWidth * newScale) / 2;
-    const newY = (containerHeight - contentHeight * newScale) / 2;
+    const newY = Math.max(padding, (containerHeight - contentHeight * newScale) / 2);
+
+    setScale(newScale);
+    setPan({ x: newX, y: newY });
+  }, []);
+
+  const panToPerson = useCallback((personId: string) => {
+    if (!containerRef.current || !contentRef.current) return;
+    
+    const personNode = contentRef.current.querySelector(`[data-id='${personId}']`) as HTMLElement;
+    if (!personNode) return;
+
+    const container = containerRef.current;
+    
+    const newScale = 1.0;
+    const newX = (container.offsetWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
+    const newY = (container.offsetHeight / 3) - (personNode.offsetTop + personNode.offsetHeight / 2) * newScale;
 
     setScale(newScale);
     setPan({ x: newX, y: newY });
   }, []);
 
   useEffect(() => {
-    if (roots.length > 0) {
+    if (roots.length > 0 && !isInFocusMode) {
       fitAndCenterTree();
     }
-  }, [roots, fitAndCenterTree]);
+  }, [roots, isInFocusMode, fitAndCenterTree]);
+
+  useEffect(() => {
+      if (selectedPersonId) {
+          // Delay to allow DOM to update if a focus change caused a re-render
+          setTimeout(() => panToPerson(selectedPersonId), 50);
+      }
+  }, [selectedPersonId, panToPerson]);
 
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -99,17 +118,24 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onSelectPerson, s
     >
       <div 
         ref={contentRef}
-        className="inline-flex tree"
+        className="inline-flex tree tree-content"
         style={{ 
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: 'top left',
             cursor: isPanning ? 'grabbing' : 'grab',
-            transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+            transition: isPanning ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)',
         }}
       >
         <ul className="flex justify-center items-start p-16">
             {roots.map(root => (
-                <TreeNode key={root.id} person={root} onSelectPerson={onSelectPerson} selectedPersonId={selectedPersonId} />
+                <TreeNode 
+                  key={root.id} 
+                  person={root} 
+                  onSelectPerson={onSelectPerson} 
+                  selectedPersonId={selectedPersonId}
+                  highlightedIds={highlightedIds}
+                  isInFocusMode={isInFocusMode}
+                />
             ))}
         </ul>
       </div>

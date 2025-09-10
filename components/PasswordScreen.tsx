@@ -8,7 +8,7 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess }) => 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const correctPassword = 'KNIFT103';
+  const correctPassword = 'kni';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

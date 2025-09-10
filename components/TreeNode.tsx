@@ -6,6 +6,8 @@ interface TreeNodeProps {
   person: Person;
   onSelectPerson: (person: Person) => void;
   selectedPersonId?: string;
+  highlightedIds: Set<string>;
+  isInFocusMode: boolean;
 }
 
 const getAge = (birthDate?: string, deathDate?: string): string => {
@@ -20,13 +22,19 @@ const getAge = (birthDate?: string, deathDate?: string): string => {
   return age >= 0 ? `(${age})` : '';
 };
 
-export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, selectedPersonId }) => {
+export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, selectedPersonId, highlightedIds, isInFocusMode }) => {
   const isSelected = person.id === selectedPersonId;
   const isSpouseSelected = person.spouse?.id === selectedPersonId;
 
+  const isNodeHighlighted = highlightedIds.has(person.id) || (person.spouse && highlightedIds.has(person.spouse.id));
+  const isDimmed = isInFocusMode && !isNodeHighlighted;
+
   return (
     // Container for a "family unit". It's an `li` element to work with the CSS line styles.
-    <li className="flex flex-col items-center relative">
+    <li 
+        className={`flex flex-col items-center relative transition-opacity duration-500 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+        data-id={person.id}
+    >
       
       {/* The person and their spouse */}
       <div className="flex items-center gap-4">
@@ -102,6 +110,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onSelectPerson, sele
               person={child}
               onSelectPerson={onSelectPerson}
               selectedPersonId={selectedPersonId}
+              highlightedIds={highlightedIds}
+              isInFocusMode={isInFocusMode}
             />
           ))}
         </ul>

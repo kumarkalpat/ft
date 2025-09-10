@@ -8,50 +8,34 @@ interface SecureImageProps {
 }
 
 export const SecureImage: React.FC<SecureImageProps> = ({ src, alt, className, name }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name
-  )}&background=random&color=fff&size=128`;
-
+  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`;
+  
+  // Start with the intended src, or the fallback if no src is provided.
+  const [currentSrc, setCurrentSrc] = useState(src || fallbackUrl);
+  
+  // useEffect to handle when the src prop changes dynamically.
   useEffect(() => {
-    let isMounted = true;
-    if (!src) {
-      setImageUrl(fallbackUrl);
-      return;
+    setCurrentSrc(src || fallbackUrl);
+  }, [src, fallbackUrl]);
+
+  const handleError = () => {
+    // If an error occurs, and we aren't already showing the fallback, switch to it.
+    if (currentSrc !== fallbackUrl) {
+      console.error(`Failed to load primary image: ${src}. Falling back to avatar.`);
+      setCurrentSrc(fallbackUrl);
+    } else {
+      // If the fallback itself fails, log it but do nothing to prevent loops.
+      console.error(`Failed to load fallback avatar: ${fallbackUrl}`);
     }
+  };
 
-    const fetchImage = async () => {
-      try {
-        const response = await fetch(src);
-        if (!response.ok) {
-          throw new Error('Image fetch failed');
-        }
-        const blob = await response.blob();
-        if (isMounted) {
-          setImageUrl(URL.createObjectURL(blob));
-        }
-      } catch (error) {
-        console.error('Failed to load image:', src, error);
-        if (isMounted) {
-          setImageUrl(fallbackUrl);
-        }
-      }
-    };
-
-    fetchImage();
-
-    return () => {
-      isMounted = false;
-      if (imageUrl && imageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    };
-  }, [src, name, fallbackUrl]);
-
-  if (!imageUrl) {
-    return <div className={`animate-pulse bg-slate-300 dark:bg-slate-700 ${className}`} />;
-  }
-
-  return <img src={imageUrl} alt={alt} className={className} referrerPolicy="no-referrer" />;
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      className={className}
+      onError={handleError}
+      referrerPolicy="no-referrer"
+    />
+  );
 };
