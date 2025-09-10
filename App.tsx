@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
 
@@ -49,61 +48,59 @@ const App: React.FC = () => {
         setHighlightedIds(new Set());
         return;
     }
-
+    
+    // In focus mode, we highlight the entire visible tree (ancestors and all descendants)
+    // to prevent any dimming.
     const idsToHighlight = new Set<string>();
-    idsToHighlight.add(person.id);
 
-    // Highlight spouse
-    if (person.partnerId) {
-        idsToHighlight.add(person.partnerId);
+    const collectDescendants = (p: Person) => {
+        idsToHighlight.add(p.id);
+        if (p.spouse) idsToHighlight.add(p.spouse.id);
+        p.children.forEach(collectDescendants);
+    };
+
+    // Start with the focused person and all their descendants
+    collectDescendants(person);
+
+    // Add immediate ancestors
+    const father = person.fatherID ? peopleMap.get(person.fatherID) : undefined;
+    const mother = person.motherID ? peopleMap.get(person.motherID) : undefined;
+
+    if (father) {
+      idsToHighlight.add(father.id);
+      if (father.spouse) idsToHighlight.add(father.spouse.id);
+    }
+    if (mother) {
+      idsToHighlight.add(mother.id);
+      if (mother.spouse) idsToHighlight.add(mother.spouse.id);
     }
     
-    // Highlight parents and their spouses
-    person.parentsIds.forEach(parentId => {
-        idsToHighlight.add(parentId);
-        const parent = peopleMap.get(parentId);
-        if (parent?.partnerId) {
-            idsToHighlight.add(parent.partnerId);
-        }
-    });
-
-    // Highlight children
-    person.children.forEach(child => {
-        idsToHighlight.add(child.id);
-    });
-
     setHighlightedIds(idsToHighlight);
   }, [focusedPersonId, peopleMap]);
 
 
-  const handleSelectPerson = useCallback((person: Person) => {
+  const handleNodeClick = useCallback((person: Person) => {
+    // Always select the person to show their details
     const fullPerson = peopleMap.get(person.id);
     setSelectedPerson(fullPerson || null);
     setSearchQuery('');
-  }, [peopleMap]);
+
+    // Toggle focus mode
+    if (focusedPersonId === person.id) {
+      // If clicking the already focused person, clear the focus
+      setFocusedPersonId(null);
+    } else {
+      // Otherwise, focus on the newly clicked person
+      setFocusedPersonId(person.id);
+    }
+  }, [focusedPersonId, peopleMap]);
 
   const handleCloseDetails = () => {
     setSelectedPerson(null);
   };
   
-  const handleFocusPerson = useCallback((person: Person) => {
-      setFocusedPersonId(person.id);
-      setSelectedPerson(person);
-  }, []);
-
   const handleClearFocus = () => {
       setFocusedPersonId(null);
-  };
-
-  const handleShare = () => {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('focusedPersonId');
-      if (selectedPerson) {
-          url.searchParams.set('focusedPersonId', selectedPerson.id);
-      }
-      navigator.clipboard.writeText(url.toString());
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
   };
   
   const handleExportPdf = async () => {
@@ -161,7 +158,30 @@ const App: React.FC = () => {
   const displayedRoots = useMemo(() => {
     if (!focusedPersonId) return roots;
     const focusedPerson = peopleMap.get(focusedPersonId);
-    return focusedPerson ? [focusedPerson] : [];
+    if (!focusedPerson) return [];
+
+    // Find immediate ancestors from the original map
+    const father = focusedPerson.fatherID ? peopleMap.get(focusedPerson.fatherID) : undefined;
+    const mother = focusedPerson.motherID ? peopleMap.get(focusedPerson.motherID) : undefined;
+    
+    // If no ancestors are in the data, the focused person is the root of the view.
+    if (!father && !mother) {
+        return [focusedPerson];
+    }
+
+    // Create shallow clones of parents and set the focused person as their ONLY child.
+    // This constructs the new tree for the focused view without mutating the original data.
+    const fatherClone = father ? { ...father, children: [focusedPerson], spouse: undefined } : undefined;
+    const motherClone = mother ? { ...mother, children: [focusedPerson], spouse: undefined } : undefined;
+    
+    // Link the cloned parents to each other as spouses
+    if (fatherClone && motherClone) {
+        fatherClone.spouse = motherClone;
+        motherClone.spouse = fatherClone;
+    }
+
+    // Return one of the parents as the root. The TreeNode component will render the spouse.
+    return fatherClone ? [fatherClone] : [motherClone!];
   }, [focusedPersonId, roots, peopleMap]);
 
 
@@ -186,7 +206,7 @@ const App: React.FC = () => {
                             <ul className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                                 {searchResults.map(person => (
                                     <li key={person.id}>
-                                        <button onClick={() => handleSelectPerson(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                        <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
                                             <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                                             <div>
                                                 <p className="font-semibold">{person.name}</p>
@@ -206,13 +226,6 @@ const App: React.FC = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
                         </button>
                     )}
-                    <button onClick={handleShare} title="Share" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
-                        {shareCopied ? 
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                            :
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
-                        }
-                    </button>
                      <button onClick={handleExportPdf} disabled={isExporting} title="Export to PDF" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
                         {isExporting ?
                             <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -247,7 +260,7 @@ const App: React.FC = () => {
             {!loading && !error && displayedRoots.length > 0 && (
                 <FamilyTree 
                     roots={displayedRoots} 
-                    onSelectPerson={handleSelectPerson} 
+                    onSelectPerson={handleNodeClick} 
                     selectedPersonId={selectedPerson?.id}
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}
@@ -264,8 +277,7 @@ const App: React.FC = () => {
              <PersonDetails 
                 person={selectedPerson} 
                 onClose={handleCloseDetails}
-                onSelectPerson={handleSelectPerson}
-                onFocusPerson={handleFocusPerson}
+                onSelectPerson={handleNodeClick}
                 peopleMap={peopleMap}
              />
         </main>

@@ -6,7 +6,6 @@ interface PersonDetailsProps {
   person: Person | null;
   onClose: () => void;
   onSelectPerson: (person: Person) => void;
-  onFocusPerson: (person: Person) => void;
   peopleMap: Map<string, Person>;
 }
 
@@ -49,7 +48,7 @@ const RelatedPersonChip: React.FC<{ person?: Person; onClick: (person: Person) =
     );
 };
 
-export const PersonDetails: React.FC<PersonDetailsProps> = ({ person, onClose, onSelectPerson, onFocusPerson, peopleMap }) => {
+export const PersonDetails: React.FC<PersonDetailsProps> = ({ person, onClose, onSelectPerson, peopleMap }) => {
   const isVisible = !!person;
   
   const father = person?.fatherID ? peopleMap.get(person.fatherID) : undefined;
@@ -90,12 +89,6 @@ export const PersonDetails: React.FC<PersonDetailsProps> = ({ person, onClose, o
                     <p><strong>Died:</strong> {person.deathDate}</p>
                   )}
                 </div>
-                 <button 
-                    onClick={() => onFocusPerson(person)} 
-                    className="mt-3 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800"
-                >
-                    Focus on {person.name.split(' ')[0]}
-                </button>
               </div>
             </div>
 
