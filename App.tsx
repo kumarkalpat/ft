@@ -89,14 +89,19 @@ const App: React.FC = () => {
     }
   }, [focusedPersonId, peopleMap]);
   
-  // Used for single-clicking nodes in the tree to toggle focus
+  // Used for single-clicking nodes in the tree to toggle focus and details
   const handleFocusToggle = useCallback((person: Person) => {
+    const fullPerson = peopleMap.get(person.id);
     if (focusedPersonId === person.id) {
+        // If the clicked person is already focused, unfocus and hide details
         setFocusedPersonId(null);
+        setSelectedPerson(null);
     } else {
+        // Otherwise, focus on the new person and show their details
         setFocusedPersonId(person.id);
+        setSelectedPerson(fullPerson || null);
     }
-  }, [focusedPersonId]);
+  }, [focusedPersonId, peopleMap]);
 
   // Used for double-clicking nodes in the tree to show details
   const handleShowDetails = useCallback((person: Person) => {
