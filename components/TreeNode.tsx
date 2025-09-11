@@ -38,23 +38,26 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
     >
       
       {/* The person and their spouse */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div
           onClick={() => onFocusPerson(person)}
           onDoubleClick={() => onShowDetails(person)}
+          role="button"
+          tabIndex={0}
+          aria-label={`View details for ${person.name}`}
           className={`
-            p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
-            ${isSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
+            p-2 rounded-lg cursor-pointer transition-all w-36 sm:w-40 min-h-[9rem] sm:min-h-[10rem] flex flex-col items-center text-center justify-center bg-white dark:bg-slate-800
+            ${isSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-xl' : 'shadow-md hover:shadow-lg hover:scale-105'}
           `}
         >
           <SecureImage
             src={person.imageUrl}
             name={person.name}
             alt={person.name}
-            className="w-20 h-20 rounded-full object-cover"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
           />
           <div className="mt-2 flex-grow flex flex-col justify-center">
-            <p className="font-semibold text-sm w-full" title={person.name}>
+            <p className="font-semibold text-xs sm:text-sm w-full" title={person.name}>
               {person.name}
             </p>
             {person.alias && (
@@ -74,19 +77,22 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
           <div
             onClick={() => onFocusPerson(person.spouse!)}
             onDoubleClick={() => onShowDetails(person.spouse!)}
+            role="button"
+            tabIndex={0}
+            aria-label={`View details for ${person.spouse.name}`}
             className={`
-              p-2 rounded-lg cursor-pointer transition-all w-40 min-h-[10rem] flex flex-col items-center text-center justify-center
-              ${isSpouseSelected ? 'bg-indigo-200 dark:bg-indigo-800 ring-2 ring-indigo-500 scale-105' : 'bg-white dark:bg-slate-800 shadow-md hover:shadow-lg hover:scale-105'}
+              p-2 rounded-lg cursor-pointer transition-all w-36 sm:w-40 min-h-[9rem] sm:min-h-[10rem] flex flex-col items-center text-center justify-center bg-white dark:bg-slate-800
+              ${isSpouseSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-xl' : 'shadow-md hover:shadow-lg hover:scale-105'}
             `}
           >
             <SecureImage
               src={person.spouse.imageUrl}
               name={person.spouse.name}
               alt={person.spouse.name}
-              className="w-20 h-20 rounded-full object-cover"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
             />
              <div className="mt-2 flex-grow flex flex-col justify-center">
-                <p className="font-semibold text-sm w-full" title={person.spouse.name}>
+                <p className="font-semibold text-xs sm:text-sm w-full" title={person.spouse.name}>
                 {person.spouse.name}
                 </p>
                 {person.spouse.alias && (

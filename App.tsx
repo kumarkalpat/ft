@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
-import { FamilyTree } from './components/FamilyTree';
+import { FamilyTree, FamilyTreeHandle } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
 import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  
+  const treeRef = useRef<FamilyTreeHandle>(null);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
 
@@ -31,12 +33,13 @@ const App: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const focusId = params.get('focusedPersonId');
         if (focusId && peopleMap.has(focusId)) {
-            setFocusedPersonId(focusId);
-            setSelectedPerson(peopleMap.get(focusId) || null);
+            const person = peopleMap.get(focusId);
+            if (person) handleNodeClick(person);
         }
       }
-  }, [peopleMap]);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [peopleMap]); // This should only run once when peopleMap is ready.
+  
   useEffect(() => {
     if (!focusedPersonId || !peopleMap.size) {
         setHighlightedIds(new Set());
@@ -49,8 +52,6 @@ const App: React.FC = () => {
         return;
     }
     
-    // In focus mode, we highlight the entire visible tree (ancestors and all descendants)
-    // to prevent any dimming.
     const idsToHighlight = new Set<string>();
 
     const collectDescendants = (p: Person) => {
@@ -58,17 +59,14 @@ const App: React.FC = () => {
         if (p.spouse) idsToHighlight.add(p.spouse.id);
         p.children.forEach(collectDescendants);
     };
-
-    // Start with the focused person and all their descendants
     collectDescendants(person);
 
-    // Add immediate ancestors
     const father = person.fatherID ? peopleMap.get(person.fatherID) : undefined;
     const mother = person.motherID ? peopleMap.get(person.motherID) : undefined;
 
     if (father) {
       idsToHighlight.add(father.id);
-      if (father.spouse) idsToHighlight.add(father.spouse.id);
+      if (father. spouse) idsToHighlight.add(father.spouse.id);
     }
     if (mother) {
       idsToHighlight.add(mother.id);
@@ -78,41 +76,50 @@ const App: React.FC = () => {
     setHighlightedIds(idsToHighlight);
   }, [focusedPersonId, peopleMap]);
 
-
-  // Used for single-click actions from search or details panel
   const handleNodeClick = useCallback((person: Person) => {
     const fullPerson = peopleMap.get(person.id);
-    setSelectedPerson(fullPerson || null);
+    if (!fullPerson) return;
     setSearchQuery('');
-    if (focusedPersonId !== person.id) {
-      setFocusedPersonId(person.id);
+
+    // If we're clicking the same person that's already fully selected, do nothing.
+    if (selectedPerson?.id === fullPerson.id) {
+        return;
     }
-  }, [focusedPersonId, peopleMap]);
+
+    // This is the key insight: if another person's details are open, we must
+    // first reset the view completely before focusing on the new person.
+    // The `setTimeout` ensures this happens in a separate render cycle, avoiding race conditions.
+    if (selectedPerson) {
+        // Step 1: Reset the view by closing the sidebar and clearing focus.
+        setSelectedPerson(null);
+        setFocusedPersonId(null);
+
+        // Step 2: Schedule the new focus to happen after the UI has reset.
+        setTimeout(() => {
+            setSelectedPerson(fullPerson);
+            setFocusedPersonId(fullPerson.id);
+        }, 100); // A small delay is more robust than 0 for CSS animations to finish.
+    } else {
+        // If no one was selected, we can set the focus directly.
+        setSelectedPerson(fullPerson);
+        setFocusedPersonId(fullPerson.id);
+    }
+  }, [peopleMap, selectedPerson]);
   
-  // Used for single-clicking nodes in the tree to toggle focus and details
   const handleFocusToggle = useCallback((person: Person) => {
-    const fullPerson = peopleMap.get(person.id);
+    // Toggling focus: if the person is already focused, clear it. Otherwise, focus them.
     if (focusedPersonId === person.id) {
-        // If the clicked person is already focused, unfocus and hide details
         setFocusedPersonId(null);
         setSelectedPerson(null);
     } else {
-        // Otherwise, focus on the new person and show their details
-        setFocusedPersonId(person.id);
-        setSelectedPerson(fullPerson || null);
+        handleNodeClick(person);
     }
-  }, [focusedPersonId, peopleMap]);
+  }, [focusedPersonId, handleNodeClick]);
 
-  // Used for double-clicking nodes in the tree to show details
   const handleShowDetails = useCallback((person: Person) => {
-    const fullPerson = peopleMap.get(person.id);
-    setSelectedPerson(fullPerson || null);
-    // Also ensure focus when opening details
-    if (focusedPersonId !== person.id) {
-        setFocusedPersonId(person.id);
-    }
-  }, [peopleMap, focusedPersonId]);
-
+    // A double-tap (or any explicit "show details" action) should always use the main, robust click handler.
+    handleNodeClick(person);
+  }, [handleNodeClick]);
 
   const handleCloseDetails = () => {
     setSelectedPerson(null);
@@ -121,6 +128,7 @@ const App: React.FC = () => {
   const handleClearFocus = () => {
       setFocusedPersonId(null);
       setSelectedPerson(null);
+      treeRef.current?.fitAndCenterTree();
   };
   
   const handleExportPdf = async () => {
@@ -130,14 +138,12 @@ const App: React.FC = () => {
       setIsExporting(true);
       
       const originalTransform = treeElement.style.transform;
-      // Reset transform to capture at full native resolution
       treeElement.style.transform = '';
-      // Allow a moment for repaint
       await new Promise(resolve => setTimeout(resolve, 100));
 
       try {
         const canvas = await (window as any).html2canvas(treeElement, {
-            scale: 2, // Increase scale for higher DPI
+            scale: 2, 
             backgroundColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#f8fafc',
             useCORS: true,
             logging: false,
@@ -148,7 +154,7 @@ const App: React.FC = () => {
             orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
             unit: 'px',
             format: [canvas.width, canvas.height],
-            hotfixes: ['px_scaling'], // Important for correct scaling
+            hotfixes: ['px_scaling'], 
         });
         
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height, undefined, 'FAST');
@@ -157,7 +163,6 @@ const App: React.FC = () => {
       } catch (e) {
           console.error("Failed to export PDF", e);
       } finally {
-        // Restore the original transform and state
         treeElement.style.transform = originalTransform;
         setIsExporting(false);
       }
@@ -180,9 +185,6 @@ const App: React.FC = () => {
     const focusedPerson = peopleMap.get(focusedPersonId);
     if (!focusedPerson) return [];
 
-    // Recursively build a clean descendant tree from the main peopleMap.
-    // This ensures that we show all descendants (grandchildren and beyond)
-    // by using the fully-populated objects from the map.
     const buildDescendantTree = (person: Person): Person => {
       const fullChildren = person.children.map(child => {
         const childFromMap = peopleMap.get(child.id)!;
@@ -193,36 +195,29 @@ const App: React.FC = () => {
 
     const focusedPersonWithDescendants = buildDescendantTree(focusedPerson);
 
-    // Find immediate ancestors to create the context for the focused view.
     const father = focusedPerson.fatherID ? peopleMap.get(focusedPerson.fatherID) : undefined;
     const mother = focusedPerson.motherID ? peopleMap.get(focusedPerson.motherID) : undefined;
     
-    // If the focused person has no parents, they are the root of this view.
     if (!father && !mother) {
         return [focusedPersonWithDescendants];
     }
 
-    // Create shallow clones of the parents to avoid mutating the original data.
-    // Set the focused person (with all their descendants) as the ONLY child to prune siblings.
     const fatherClone = father ? { ...father, children: [focusedPersonWithDescendants], spouse: undefined } : undefined;
     const motherClone = mother ? { ...mother, children: [focusedPersonWithDescendants], spouse: undefined } : undefined;
     
-    // Link the cloned parents to each other as spouses.
     if (fatherClone && motherClone) {
         fatherClone.spouse = motherClone;
         motherClone.spouse = fatherClone;
     }
 
-    // Return one of the parents as the root. The TreeNode component will render the spouse.
     return fatherClone ? [fatherClone] : [motherClone!];
   }, [focusedPersonId, roots, peopleMap]);
 
-
   return (
-    <div className="font-sans antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-white h-screen w-screen overflow-hidden flex flex-col">
+    <div className="antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-white h-screen w-screen overflow-hidden flex flex-col">
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
-                <h1 className="text-xl font-bold hidden sm:block">Kalpats Family Tree</h1>
+                <h1 className="text-lg sm:text-xl font-bold">Kalpats Family Tree</h1>
                 
                 <div className="flex-1 flex justify-center">
                     <div className="relative w-full max-w-md">
@@ -233,7 +228,7 @@ const App: React.FC = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setIsSearchFocused(true)}
-                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 100)}
+                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
                         />
                          {isSearchFocused && searchResults.length > 0 && (
                             <ul className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
@@ -253,7 +248,7 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2">
                     {focusedPersonId && (
                         <button onClick={handleClearFocus} title="Reset View" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
@@ -266,6 +261,14 @@ const App: React.FC = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         }
                     </button>
+                </div>
+                
+                <div className="sm:hidden">
+                    {focusedPersonId && (
+                        <button onClick={handleClearFocus} title="Reset View" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
+                        </button>
+                    )}
                 </div>
             </div>
         </header>
@@ -292,10 +295,12 @@ const App: React.FC = () => {
             )}
             {!loading && !error && displayedRoots.length > 0 && (
                 <FamilyTree 
+                    ref={treeRef}
                     roots={displayedRoots} 
                     onFocusPerson={handleFocusToggle}
                     onShowDetails={handleShowDetails}
                     selectedPersonId={selectedPerson?.id}
+                    focusedPersonId={focusedPersonId}
                     peopleMap={peopleMap}
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}
@@ -310,6 +315,14 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
+            {/* Backdrop for mobile details panel */}
+            <div 
+                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-30 transition-opacity md:hidden
+                    ${selectedPerson ? 'opacity-100' : 'opacity-0 pointer-events-none'}`
+                }
+                onClick={handleCloseDetails} 
+                aria-hidden="true"
+            />
              <PersonDetails 
                 person={selectedPerson} 
                 onClose={handleCloseDetails}

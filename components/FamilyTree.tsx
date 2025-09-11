@@ -1,24 +1,36 @@
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useLayoutEffect, useCallback, useImperativeHandle } from 'react';
 import { Person } from '../types';
 import { TreeNode } from './TreeNode';
+import { Minimap } from './Minimap';
+
+export interface FamilyTreeHandle {
+  panToPerson: (personId: string) => void;
+  fitAndCenterTree: () => void;
+}
 
 interface FamilyTreeProps {
   roots: Person[];
   onFocusPerson: (person: Person) => void;
   onShowDetails: (person: Person) => void;
   selectedPersonId?: string;
+  focusedPersonId: string | null;
   highlightedIds: Set<string>;
   isInFocusMode: boolean;
   peopleMap: Map<string, Person>;
   isSidebarVisible: boolean;
 }
 
-export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, onShowDetails, selectedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible }) => {
+export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({ roots, onFocusPerson, onShowDetails, selectedPersonId, focusedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible }, ref) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isMinimapVisible, setIsMinimapVisible] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // Refs for touch interactions
   const lastPanPosition = useRef<{ x: number, y: number } | null>(null);
@@ -29,6 +41,32 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
   const lastTapInfoRef = useRef<{ personId: string; time: number } | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const hasMovedRef = useRef(false);
+
+  // Keep track of component dimensions for the minimap
+  useLayoutEffect(() => {
+    const observer = new ResizeObserver(() => {
+        if (containerRef.current) {
+            setContainerSize({
+                width: containerRef.current.offsetWidth,
+                height: containerRef.current.offsetHeight,
+            });
+        }
+        // Use a small delay for scrollWidth to be accurate after render
+        setTimeout(() => {
+          if (contentRef.current) {
+              setContentSize({
+                  width: contentRef.current.scrollWidth,
+                  height: contentRef.current.scrollHeight,
+              });
+          }
+        }, 100);
+    });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+    if (contentRef.current) observer.observe(contentRef.current);
+
+    return () => observer.disconnect();
+  }, [roots]); // Re-observe if roots change, as content will re-render
 
 
   const fitAndCenterTree = useCallback(() => {
@@ -55,7 +93,6 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     const scaleToFit = Math.min(scaleX, scaleY);
     
     // Don't scale up past 100% for the initial fit, but ensure the tree isn't too small.
-    // Let's set a minimum scale of 0.75, so it's always reasonably large.
     const newScale = Math.min(1, Math.max(scaleToFit, 0.75));
 
     const newX = (containerWidth - contentWidth * newScale) / 2;
@@ -73,7 +110,10 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     if (!containerRef.current || !contentRef.current) return;
     
     const personNode = contentRef.current.querySelector(`[data-id='${personId}']`) as HTMLElement;
-    if (!personNode) return;
+    if (!personNode) {
+      console.warn(`panToPerson: Could not find node with id ${personId}. It might not be rendered yet.`);
+      return;
+    }
 
     const container = containerRef.current;
     
@@ -82,12 +122,47 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     const availableWidth = container.offsetWidth - sidebarWidth;
 
     const newScale = 1.0;
+    
+    // Center horizontally
     const newX = (availableWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
-    const newY = (container.offsetHeight / 2) - (personNode.offsetTop + personNode.offsetHeight / 2) * newScale;
+    
+    // Position near the top with an aesthetic margin
+    const topMargin = 80;
+    const newY = topMargin - (personNode.offsetTop * newScale);
 
     setScale(newScale);
     setPan({ x: newX, y: newY });
   }, [isSidebarVisible]);
+  
+  // Effect to pan the view when the focused person changes, now inside FamilyTree
+  useLayoutEffect(() => {
+    if (focusedPersonId) {
+      // Use requestAnimationFrame to wait for the next repaint, ensuring the DOM is updated.
+      const animationFrameId = requestAnimationFrame(() => {
+        panToPerson(focusedPersonId);
+      });
+      return () => cancelAnimationFrame(animationFrameId);
+    }
+  }, [focusedPersonId, roots, panToPerson]); // Depends on focus ID, the tree structure, and the pan function itself.
+
+
+  useImperativeHandle(ref, () => ({
+    panToPerson,
+    fitAndCenterTree,
+  }), [panToPerson, fitAndCenterTree]);
+  
+  const handleMinimapPan = useCallback((normalizedPosition: { x: number, y: number }) => {
+    if (!containerRef.current || !contentRef.current) return;
+
+    // Use the latest size state
+    const currentContainerSize = { width: containerRef.current.offsetWidth, height: containerRef.current.offsetHeight };
+    const currentContentSize = { width: contentRef.current.scrollWidth, height: contentRef.current.scrollHeight };
+
+    const newX = -(normalizedPosition.x * currentContentSize.width * scale) + (currentContainerSize.width / 2);
+    const newY = -(normalizedPosition.y * currentContentSize.height * scale) + (currentContainerSize.height / 2);
+
+    setPan({ x: newX, y: newY });
+  }, [scale]); // Depends on scale
 
   useLayoutEffect(() => {
     if (roots.length > 0 && !isInFocusMode) {
@@ -97,13 +172,6 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
     window.addEventListener('resize', fitAndCenterTree);
     return () => window.removeEventListener('resize', fitAndCenterTree);
   }, [roots, isInFocusMode, fitAndCenterTree]);
-
-  useLayoutEffect(() => {
-      if (selectedPersonId) {
-          setTimeout(() => panToPerson(selectedPersonId), 50);
-      }
-  }, [selectedPersonId, panToPerson]);
-
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -320,12 +388,26 @@ export const FamilyTree: React.FC<FamilyTreeProps> = ({ roots, onFocusPerson, on
             ))}
         </ul>
       </div>
+
+      {isMinimapVisible && contentSize.width > 0 && containerSize.width > 0 && (
+          <Minimap
+              containerSize={containerSize}
+              contentSize={contentSize}
+              pan={pan}
+              scale={scale}
+              roots={roots}
+              onPan={handleMinimapPan}
+          />
+      )}
       
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
             <button onClick={zoomIn} title="Zoom In" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">+</button>
             <button onClick={zoomOut} title="Zoom Out" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">-</button>
             <button onClick={reset} title="Reset View" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-sm flex items-center justify-center">Reset</button>
+            <button onClick={() => setIsMinimapVisible(v => !v)} title="Toggle Minimap" className={`w-10 h-10 rounded-full shadow-md text-sm flex items-center justify-center transition-colors ${isMinimapVisible ? 'bg-indigo-500 text-white' : 'bg-white dark:bg-slate-700'}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0-6v6m0 6h6m-6-6h6m6-3l-5.447 2.724A1 1 0 0115 16.382V5.618a1 1 0 011.447-.894L21 7m-6 3v6" /></svg>
+            </button>
       </div>
     </div>
   );
-};
+});
