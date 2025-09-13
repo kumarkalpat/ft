@@ -67,7 +67,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             )}
             {person.birthDate && (
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {new Date(person.birthDate).getFullYear()} {getAge(person.birthDate, person.deathDate)}
+                {person.deathDate
+                  ? `${new Date(person.birthDate).getFullYear()} - ${new Date(person.deathDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                  : `${new Date(person.birthDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                }
               </p>
             )}
           </div>
@@ -102,7 +105,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                 )}
                 {person.spouse.birthDate && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {new Date(person.spouse.birthDate).getFullYear()} {getAge(person.spouse.birthDate, person.spouse.deathDate)}
+                    {person.spouse.deathDate
+                      ? `${new Date(person.spouse.birthDate).getFullYear()} - ${new Date(person.spouse.deathDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                      : `${new Date(person.spouse.birthDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                    }
                 </p>
                 )}
             </div>

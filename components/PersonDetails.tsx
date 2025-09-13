@@ -91,10 +91,10 @@ export const PersonDetails: React.FC<PersonDetailsProps> = ({ person, onClose, o
                 {person.alias && <p className="text-sm text-slate-500 dark:text-slate-400">"{person.alias}"</p>}
                 <div className="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-1">
                   {person.birthDate && (
-                    <p><strong>Born:</strong> {person.birthDate} {getAge(person.birthDate, person.deathDate)}</p>
+                    <p><strong>Born:</strong> {person.birthDate} {!person.deathDate && getAge(person.birthDate, person.deathDate)}</p>
                   )}
                    {person.deathDate && (
-                    <p><strong>Died:</strong> {person.deathDate}</p>
+                    <p><strong>Died:</strong> {person.deathDate} {getAge(person.birthDate, person.deathDate)}</p>
                   )}
                 </div>
               </div>
