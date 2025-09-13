@@ -1,11 +1,18 @@
-import React, { useState, useRef, useLayoutEffect, useCallback, useImperativeHandle } from 'react';
+import React, { useState, useRef, useLayoutEffect, useCallback, useImperativeHandle, useEffect } from 'react';
 import { Person } from '../types';
 import { TreeNode } from './TreeNode';
-import { Minimap } from './Minimap';
+
+export interface MinimapViewport {
+  containerSize: { width: number; height: number };
+  contentSize: { width: number; height: number };
+  pan: { x: number; y: number };
+  scale: number;
+}
 
 export interface FamilyTreeHandle {
   panToPerson: (personId: string) => void;
   fitAndCenterTree: () => void;
+  handleMinimapPan: (normalizedPosition: { x: number; y: number }) => void;
 }
 
 interface FamilyTreeProps {
@@ -18,13 +25,13 @@ interface FamilyTreeProps {
   isInFocusMode: boolean;
   peopleMap: Map<string, Person>;
   isSidebarVisible: boolean;
+  onViewportUpdate: (viewport: MinimapViewport) => void;
 }
 
-export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({ roots, onFocusPerson, onShowDetails, selectedPersonId, focusedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible }, ref) => {
+export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({ roots, onFocusPerson, onShowDetails, selectedPersonId, focusedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible, onViewportUpdate }, ref) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [isMinimapVisible, setIsMinimapVisible] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -145,24 +152,46 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
     }
   }, [focusedPersonId, roots, panToPerson]); // Depends on focus ID, the tree structure, and the pan function itself.
 
+  const handleMinimapPan = useCallback((normalizedPosition: { x: number, y: number }) => {
+    if (!containerRef.current || !contentRef.current) return;
+
+    const container = containerRef.current;
+    const content = contentRef.current;
+    
+    const scaledContentWidth = content.scrollWidth * scale;
+    const scaledContentHeight = content.scrollHeight * scale;
+    
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+
+    // Calculate the total scrollable range (the difference between content and container sizes).
+    // This is 0 if content is smaller than the container.
+    const scrollableWidth = Math.max(0, scaledContentWidth - containerWidth);
+    const scrollableHeight = Math.max(0, scaledContentHeight - containerHeight);
+
+    // The new pan position is the negative of the scroll position.
+    // A pan value of 0 aligns the top/left edges. A negative pan value moves the content up/left.
+    const newX = -normalizedPosition.x * scrollableWidth;
+    const newY = -normalizedPosition.y * scrollableHeight;
+
+    setPan({ x: newX, y: newY });
+  }, [scale]);
 
   useImperativeHandle(ref, () => ({
     panToPerson,
     fitAndCenterTree,
-  }), [panToPerson, fitAndCenterTree]);
+    handleMinimapPan,
+  }), [panToPerson, fitAndCenterTree, handleMinimapPan]);
   
-  const handleMinimapPan = useCallback((normalizedPosition: { x: number, y: number }) => {
-    if (!containerRef.current || !contentRef.current) return;
+  useEffect(() => {
+    onViewportUpdate({
+        containerSize,
+        contentSize,
+        pan,
+        scale,
+    });
+  }, [containerSize, contentSize, pan, scale, onViewportUpdate]);
 
-    // Use the latest size state
-    const currentContainerSize = { width: containerRef.current.offsetWidth, height: containerRef.current.offsetHeight };
-    const currentContentSize = { width: contentRef.current.scrollWidth, height: contentRef.current.scrollHeight };
-
-    const newX = -(normalizedPosition.x * currentContentSize.width * scale) + (currentContainerSize.width / 2);
-    const newY = -(normalizedPosition.y * currentContentSize.height * scale) + (currentContainerSize.height / 2);
-
-    setPan({ x: newX, y: newY });
-  }, [scale]); // Depends on scale
 
   useLayoutEffect(() => {
     if (roots.length > 0 && !isInFocusMode) {
@@ -389,24 +418,10 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
         </ul>
       </div>
 
-      {isMinimapVisible && contentSize.width > 0 && containerSize.width > 0 && (
-          <Minimap
-              containerSize={containerSize}
-              contentSize={contentSize}
-              pan={pan}
-              scale={scale}
-              roots={roots}
-              onPan={handleMinimapPan}
-          />
-      )}
-      
       <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2">
             <button onClick={zoomIn} title="Zoom In" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">+</button>
             <button onClick={zoomOut} title="Zoom Out" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-xl font-bold flex items-center justify-center">-</button>
             <button onClick={reset} title="Reset View" className="w-10 h-10 bg-white dark:bg-slate-700 rounded-full shadow-md text-sm flex items-center justify-center">Reset</button>
-            <button onClick={() => setIsMinimapVisible(v => !v)} title="Toggle Minimap" className={`w-10 h-10 rounded-full shadow-md text-sm flex items-center justify-center transition-colors ${isMinimapVisible ? 'bg-indigo-500 text-white' : 'bg-white dark:bg-slate-700'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0-6v6m0 6h6m-6-6h6m6-3l-5.447 2.724A1 1 0 0115 16.382V5.618a1 1 0 011.447-.894L21 7m-6 3v6" /></svg>
-            </button>
       </div>
     </div>
   );

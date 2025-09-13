@@ -12,11 +12,11 @@ export const MinimapNode: React.FC<MinimapNodeProps> = React.memo(({ person }) =
       {/* Container for the person and spouse nodes */}
       <div className="flex items-center gap-4">
         {/* Person representation */}
-        <div className="w-40 h-[10rem] bg-slate-400 dark:bg-slate-600 rounded-lg" />
+        <div className="w-40 h-10 bg-slate-300 dark:bg-slate-500 rounded-lg" />
         
         {/* Spouse representation */}
         {person.spouse && (
-          <div className="w-40 h-[10rem] bg-slate-400 dark:bg-slate-600 rounded-lg" />
+          <div className="w-40 h-10 bg-slate-300 dark:bg-slate-500 rounded-lg" />
         )}
       </div>
 

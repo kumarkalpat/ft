@@ -28,10 +28,10 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
   }, []);
 
   const minimapScale = useMemo(() => {
-    if (!minimapSize.width || !contentSize.width) return 0;
-    const padding = 16; // p-2 is 0.5rem * 2 = 16px
-    const availableWidth = minimapSize.width - padding;
-    const availableHeight = minimapSize.height - padding;
+    if (!minimapSize.width || !contentSize.width || minimapSize.width <= 0 || minimapSize.height <= 0) return 0;
+    // The content will scale to fit within the full dimensions of the container.
+    const availableWidth = minimapSize.width;
+    const availableHeight = minimapSize.height;
     return Math.min(availableWidth / contentSize.width, availableHeight / contentSize.height);
   }, [minimapSize, contentSize]);
 
@@ -46,7 +46,7 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
     transform: `translate(${-pan.x / scale * minimapScale}px, ${-pan.y / scale * minimapScale}px)`,
   };
 
-  const handleInteraction = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleInteraction = useCallback((e: React.MouseEvent<HTMLDivElement> | MouseEvent) => {
     if (!minimapRef.current) return;
     const rect = minimapRef.current.getBoundingClientRect();
     
@@ -57,7 +57,7 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
     const clickX = e.clientX - rect.left - offsetX;
     const clickY = e.clientY - rect.top - offsetY;
     
-    // Normalize the position to a 0-1 range based on the content size
+    // Normalize the position to a 0-1 range based on the content size, clamping at the edges
     const normalizedX = Math.max(0, Math.min(1, clickX / minimapContentSize.width));
     const normalizedY = Math.max(0, Math.min(1, clickY / minimapContentSize.height));
     
@@ -66,12 +66,25 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    if (!minimapRef.current) return;
+
+    const rect = minimapRef.current.getBoundingClientRect();
+    
+    // Calculate click position relative to the minimap's content area
+    const offsetX = (minimapSize.width - minimapContentSize.width) / 2;
+    const offsetY = (minimapSize.height - minimapContentSize.height) / 2;
+    const clickX = e.clientX - rect.left - offsetX;
+    const clickY = e.clientY - rect.top - offsetY;
+
+    // Only start interaction if the click is within the content bounds
+    if (clickX < 0 || clickX > minimapContentSize.width || clickY < 0 || clickY > minimapContentSize.height) {
+        return;
+    }
+
     handleInteraction(e); // Pan on initial click
     
     const handleMouseMove = (moveEvent: MouseEvent) => {
-        // Create a synthetic event to pass to the handler
-        const syntheticEvent = { clientX: moveEvent.clientX, clientY: moveEvent.clientY, preventDefault: () => {} } as any;
-        handleInteraction(syntheticEvent);
+        handleInteraction(moveEvent);
     };
 
     const handleMouseUp = () => {
@@ -86,37 +99,39 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
   return (
     <div
       ref={minimapRef}
-      className="absolute bottom-4 left-4 z-20 w-48 h-48 sm:w-64 sm:h-64 bg-slate-200/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700 shadow-lg overflow-hidden flex items-center justify-center p-2 cursor-pointer"
+      className="flex-shrink-0 w-48 h-10 rounded-full overflow-hidden flex items-center justify-center border border-slate-300 dark:border-slate-600 px-2"
+      title="Minimap Navigator"
       onMouseDown={handleMouseDown}
     >
-      <div 
-        className="relative"
-        style={{
-          width: `${minimapContentSize.width}px`,
-          height: `${minimapContentSize.height}px`,
-        }}
-      >
         <div 
-            style={{ 
-                transform: `scale(${minimapScale})`,
-                transformOrigin: 'top left',
-            }}
+          className="relative"
+          style={{
+            width: `${minimapContentSize.width}px`,
+            height: `${minimapContentSize.height}px`,
+            cursor: 'pointer',
+          }}
         >
-            <div className="inline-flex tree">
-                <ul className="flex justify-center items-start px-16 pb-8">
-                    {roots.map(root => (
-                        <MinimapNode key={root.id} person={root} />
-                    ))}
-                </ul>
-            </div>
-        </div>
+          <div 
+              style={{ 
+                  transform: `scale(${minimapScale})`,
+                  transformOrigin: 'top left',
+              }}
+          >
+              <div className="inline-flex tree minimap-tree">
+                  <ul className="flex justify-center items-start px-16 pb-8">
+                      {roots.map(root => (
+                          <MinimapNode key={root.id} person={root} />
+                      ))}
+                  </ul>
+              </div>
+          </div>
 
-        {/* Viewport indicator */}
-        <div
-          className="absolute top-0 left-0 bg-indigo-500/40 border-2 border-indigo-600 rounded pointer-events-none"
-          style={viewportStyle}
-        />
-      </div>
+          {/* Viewport indicator */}
+          <div
+            className="absolute top-0 left-0 bg-indigo-500/40 border-2 border-indigo-600 rounded pointer-events-none"
+            style={viewportStyle}
+          />
+        </div>
     </div>
   );
 };

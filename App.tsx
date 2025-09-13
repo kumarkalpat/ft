@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
-import { FamilyTree, FamilyTreeHandle } from './components/FamilyTree';
+import { FamilyTree, FamilyTreeHandle, MinimapViewport } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
 import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
+import { Minimap } from './components/Minimap';
 
 const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDate,bio
 1,John Doe,Male,,,2,https://ui-avatars.com/api/?name=John+Doe,1950-01-01,Founder of the Doe family.
@@ -27,6 +28,21 @@ const App: React.FC = () => {
   const treeRef = useRef<FamilyTreeHandle>(null);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
+
+  const [minimapViewport, setMinimapViewport] = useState<MinimapViewport>({
+    containerSize: { width: 0, height: 0 },
+    contentSize: { width: 0, height: 0 },
+    pan: { x: 0, y: 0 },
+    scale: 1,
+  });
+
+  const handleViewportUpdate = useCallback((viewport: MinimapViewport) => {
+      setMinimapViewport(viewport);
+  }, []);
+
+  const handleMinimapPan = useCallback((position: { x: number, y: number }) => {
+      treeRef.current?.handleMinimapPan(position);
+  }, []);
 
   useEffect(() => {
       if (peopleMap.size > 0) {
@@ -223,30 +239,43 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="flex-1 flex justify-center">
-                    <div className="relative w-full max-w-md">
-                        <input
-                            type="text"
-                            placeholder="Search for a person..."
-                            className="w-full pl-4 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => setIsSearchFocused(true)}
-                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
-                        />
-                         {isSearchFocused && searchResults.length > 0 && (
-                            <ul className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                                {searchResults.map(person => (
-                                    <li key={person.id}>
-                                        <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
-                                            <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                                            <div>
-                                                <p className="font-semibold">{person.name}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
-                                            </div>
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
+                    <div className="flex items-center gap-4 w-full max-w-3xl">
+                        <div className="relative flex-grow">
+                            <input
+                                type="text"
+                                placeholder="Search for a person..."
+                                className="w-full h-10 pl-4 pr-4 rounded-full bg-slate-100 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => setIsSearchFocused(true)}
+                                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
+                            />
+                            {isSearchFocused && searchResults.length > 0 && (
+                                <ul className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                                    {searchResults.map(person => (
+                                        <li key={person.id}>
+                                            <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                                <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                                                <div>
+                                                    <p className="font-semibold">{person.name}</p>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
+                                                </div>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                        
+                        {!loading && !error && minimapViewport.contentSize.width > 0 && (
+                            <Minimap
+                                containerSize={minimapViewport.containerSize}
+                                contentSize={minimapViewport.contentSize}
+                                pan={minimapViewport.pan}
+                                scale={minimapViewport.scale}
+                                roots={displayedRoots}
+                                onPan={handleMinimapPan}
+                            />
                         )}
                     </div>
                 </div>
@@ -308,6 +337,7 @@ const App: React.FC = () => {
                     highlightedIds={highlightedIds}
                     isInFocusMode={!!focusedPersonId}
                     isSidebarVisible={!!selectedPerson}
+                    onViewportUpdate={handleViewportUpdate}
                 />
             )}
             {!loading && !error && displayedRoots.length === 0 && (
