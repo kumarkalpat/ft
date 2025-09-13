@@ -25,7 +25,10 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess }) => 
     <div className="flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900">
       <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-slate-800">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Kalpats Family Tree</h1>
+          <div className="flex items-center justify-center gap-3">
+            <img src="https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs" alt="Kalpats Family Tree Logo" className="h-10 w-10 object-contain" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Kalpats Family Tree</h1>
+          </div>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
             Please enter the password to continue.
           </p>

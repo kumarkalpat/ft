@@ -96,7 +96,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
     const newScale = Math.min(1, Math.max(scaleToFit, 0.75));
 
     const newX = (containerWidth - contentWidth * newScale) / 2;
-    const newY = 20;
+    const newY = (containerHeight - contentHeight * newScale) / 2;
     
     if (isNaN(newScale) || isNaN(newX) || isNaN(newY)) {
         return;
@@ -120,15 +120,15 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
     const isMobile = window.innerWidth < 768;
     const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0;
     const availableWidth = container.offsetWidth - sidebarWidth;
+    const availableHeight = container.offsetHeight;
 
     const newScale = 1.0;
     
     // Center horizontally
     const newX = (availableWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
     
-    // Position near the top with an aesthetic margin
-    const topMargin = 80;
-    const newY = topMargin - (personNode.offsetTop * newScale);
+    // Center vertically
+    const newY = (availableHeight / 2) - (personNode.offsetTop + personNode.offsetHeight / 2) * newScale;
 
     setScale(newScale);
     setPan({ x: newX, y: newY });
