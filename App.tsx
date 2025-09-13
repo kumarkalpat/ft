@@ -235,7 +235,7 @@ const App: React.FC = () => {
             <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
                   <img src="https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs" alt="Kalpats Family Tree Logo" className="h-8 w-8 object-contain" />
-                  <h1 className="text-lg sm:text-xl font-bold">Kalpats Family Tree</h1>
+                  <h1 className="hidden sm:inline text-lg sm:text-xl font-bold">Kalpats Family Tree</h1>
                 </div>
                 
                 <div className="flex-1 flex justify-center">
