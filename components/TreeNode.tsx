@@ -38,7 +38,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
     >
       
       {/* The person and their spouse */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <div
           onClick={() => onFocusPerson(person)}
           onDoubleClick={() => onShowDetails(person)}

@@ -68,10 +68,12 @@
         transform: translateX(-50%);
         width: 0;
         height: 40px;
-        border-left: 3px solid #94a3b8; /* slate-400 */
+        border-left: 2px solid #94a3b8; /* slate-400 */
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
       }
       .dark .tree li > ul::before {
         border-color: #334155; /* slate-700 */
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
       }
 
       /* --- Children Connectors Refactored --- */
@@ -85,10 +87,12 @@
         border-color: #94a3b8; /* slate-400 */
         border-style: solid;
         border-width: 0;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
       }
       .dark .tree ul ul li::before,
       .dark .tree ul ul li::after {
         border-color: #334155; /* slate-700 */
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
       }
 
       /* Vertical line for an ONLY child */
@@ -96,7 +100,7 @@
         left: 50%;
         transform: translateX(-50%);
         height: 40px;
-        border-left-width: 3px;
+        border-left-width: 2px;
       }
       
       /* Middle children get a T-junction */
@@ -104,12 +108,12 @@
         left: 50%;
         transform: translateX(-50%);
         height: 40px;
-        border-left-width: 3px;
+        border-left-width: 2px;
       }
       .tree ul ul li:not(:first-child):not(:last-child)::after {
         left: 0;
         width: 100%;
-        border-top-width: 3px;
+        border-top-width: 2px;
       }
 
       /* First child (when there are siblings) gets a curved L-shape */
@@ -117,8 +121,8 @@
         left: 50%;
         width: 50%;
         height: 40px;
-        border-top-width: 3px;
-        border-left-width: 3px;
+        border-top-width: 2px;
+        border-left-width: 2px;
         border-top-left-radius: 1rem;
       }
 
@@ -127,12 +131,19 @@
         right: 50%;
         width: 50%;
         height: 40px;
-        border-top-width: 3px;
-        border-right-width: 3px;
+        border-top-width: 2px;
+        border-right-width: 2px;
         border-top-right-radius: 1rem;
       }
       
-      /* --- Minimap Specific Line Colors --- */
+      /* --- Minimap Specific Styles --- */
+      /* Remove shadows for minimap lines for clarity */
+      .minimap-tree li > ul::before,
+      .minimap-tree ul ul li::before,
+      .minimap-tree ul ul li::after {
+          filter: none;
+      }
+      
       .dark .minimap-tree li > ul::before,
       .dark .minimap-tree ul ul li::before,
       .dark .minimap-tree ul ul li::after {
