@@ -11,7 +11,7 @@ export interface MinimapViewport {
 
 export interface FamilyTreeHandle {
   panToPerson: (personId: string) => void;
-  fitAndCenterTree: () => void;
+  panToTop: () => void;
   handleMinimapPan: (normalizedPosition: { x: number; y: number }) => void;
 }
 
@@ -76,35 +76,24 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
   }, [roots]); // Re-observe if roots change, as content will re-render
 
 
-  const fitAndCenterTree = useCallback(() => {
+  const panToTop = useCallback(() => {
     if (!containerRef.current || !contentRef.current) return;
     
-    const isMobile = window.innerWidth < 768; // Tailwind's 'md' breakpoint
-    const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0; // w-96 is 24rem = 384px
+    const isMobile = window.innerWidth < 768;
+    const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0;
 
     const containerWidth = containerRef.current.offsetWidth - sidebarWidth;
-    const containerHeight = containerRef.current.offsetHeight;
     const contentWidth = contentRef.current.scrollWidth;
-    const contentHeight = contentRef.current.scrollHeight;
 
-    if (contentWidth === 0 || contentHeight === 0) {
-      requestAnimationFrame(fitAndCenterTree);
+    if (contentWidth === 0) {
+      requestAnimationFrame(panToTop);
       return;
     }
 
-    const padding = 80;
-    const scaleX = (containerWidth - padding) / contentWidth;
-    const scaleY = (containerHeight - padding) / contentHeight;
-    
-    // Calculate the scale needed to fit the whole tree.
-    const scaleToFit = Math.min(scaleX, scaleY);
-    
-    // Don't scale up past 100% for the initial fit, but ensure the tree isn't too small.
-    const newScale = Math.min(1, Math.max(scaleToFit, 0.75));
-
+    const newScale = 1.0;
     const newX = (containerWidth - contentWidth * newScale) / 2;
-    const newY = (containerHeight - contentHeight * newScale) / 2;
-    
+    const newY = 80; // Apply top padding
+
     if (isNaN(newScale) || isNaN(newX) || isNaN(newY)) {
         return;
     }
@@ -179,9 +168,9 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
 
   useImperativeHandle(ref, () => ({
     panToPerson,
-    fitAndCenterTree,
+    panToTop,
     handleMinimapPan,
-  }), [panToPerson, fitAndCenterTree, handleMinimapPan]);
+  }), [panToPerson, panToTop, handleMinimapPan]);
   
   useEffect(() => {
     onViewportUpdate({
@@ -193,14 +182,26 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
   }, [containerSize, contentSize, pan, scale, onViewportUpdate]);
 
 
+  // Initial positioning when roots are ready or focus is cleared
   useLayoutEffect(() => {
     if (roots.length > 0 && !isInFocusMode) {
-      fitAndCenterTree();
+      // Delay to ensure DOM is ready for measurement
+      const timeoutId = setTimeout(() => panToTop(), 100);
+      return () => clearTimeout(timeoutId);
     }
-    
-    window.addEventListener('resize', fitAndCenterTree);
-    return () => window.removeEventListener('resize', fitAndCenterTree);
-  }, [roots, isInFocusMode, fitAndCenterTree]);
+  }, [roots, isInFocusMode, panToTop]);
+
+  // Resize handling
+  useEffect(() => {
+    const handleResize = () => {
+      if (!isInFocusMode) {
+        panToTop();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isInFocusMode, panToTop]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -375,7 +376,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
     if (isInFocusMode && selectedPersonId) {
         panToPerson(selectedPersonId);
     } else {
-        fitAndCenterTree();
+        panToTop();
     }
   };
 
