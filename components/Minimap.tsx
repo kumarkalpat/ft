@@ -9,9 +9,10 @@ interface MinimapProps {
   scale: number;
   roots: Person[];
   onPan: (position: { x: number; y: number }) => void;
+  className?: string;
 }
 
-export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pan, scale, roots, onPan }) => {
+export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pan, scale, roots, onPan, className }) => {
   const minimapRef = useRef<HTMLDivElement>(null);
   const [minimapSize, setMinimapSize] = useState({ width: 0, height: 0 });
 
@@ -99,7 +100,7 @@ export const Minimap: React.FC<MinimapProps> = ({ containerSize, contentSize, pa
   return (
     <div
       ref={minimapRef}
-      className="flex-shrink-0 w-48 h-10 rounded-full overflow-hidden flex items-center justify-center border border-slate-300 dark:border-slate-600 px-2"
+      className={`flex-shrink-0 w-48 h-10 rounded-full overflow-hidden flex items-center justify-center border border-slate-300 dark:border-slate-600 px-2 ${className || ''}`}
       title="Minimap Navigator"
       onMouseDown={handleMouseDown}
     >

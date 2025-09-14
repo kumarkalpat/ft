@@ -269,6 +269,7 @@ const App: React.FC = () => {
                         
                         {!loading && !error && minimapViewport.contentSize.width > 0 && (
                             <Minimap
+                                className="hidden md:flex"
                                 containerSize={minimapViewport.containerSize}
                                 contentSize={minimapViewport.contentSize}
                                 pan={minimapViewport.pan}
