@@ -47,14 +47,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
           aria-label={`View details for ${person.name}`}
           className={`
             p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-            ${isSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
+            ${isSelected 
+              ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]' 
+              : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]'
+            }
           `}
         >
           <SecureImage
             src={person.imageUrl}
             name={person.name}
             alt={person.name}
-            className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+            className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
           />
           <div className="mt-1 flex-grow flex flex-col justify-center">
             <p className="font-semibold text-sm w-full" title={person.name}>
@@ -85,14 +88,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             aria-label={`View details for ${person.spouse.name}`}
             className={`
               p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-              ${isSpouseSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
+              ${isSpouseSelected 
+                ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]' 
+                : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]'
+              }
             `}
           >
             <SecureImage
               src={person.spouse.imageUrl}
               name={person.spouse.name}
               alt={person.spouse.name}
-              className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+              className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
             />
              <div className="mt-1 flex-grow flex flex-col justify-center">
                 <p className="font-semibold text-sm w-full" title={person.spouse.name}>
