@@ -239,7 +239,7 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="flex-1 flex justify-center">
-                    <div className="flex items-center gap-4 w-full max-w-3xl">
+                    <div className="flex items-center gap-4 w-full max-w-7xl">
                         <div className="relative flex-grow">
                             <input
                                 type="text"
@@ -251,13 +251,13 @@ const App: React.FC = () => {
                                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
                             />
                             {isSearchFocused && searchResults.length > 0 && (
-                                <ul className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <ul className="absolute top-full mt-2 min-w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 z-30">
                                     {searchResults.map(person => (
                                         <li key={person.id}>
                                             <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
                                                 <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                                                 <div>
-                                                    <p className="font-semibold">{person.name}</p>
+                                                    <p className="font-semibold whitespace-nowrap">{person.name}</p>
                                                     <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
                                                 </div>
                                             </button>
