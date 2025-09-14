@@ -47,7 +47,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
           aria-label={`View details for ${person.name}`}
           className={`
             p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800
-            ${isSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-xl' : 'shadow-md hover:shadow-lg hover:scale-105'}
+            ${isSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
           `}
         >
           <SecureImage
@@ -85,7 +85,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             aria-label={`View details for ${person.spouse.name}`}
             className={`
               p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800
-              ${isSpouseSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-xl' : 'shadow-md hover:shadow-lg hover:scale-105'}
+              ${isSpouseSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
             `}
           >
             <SecureImage
