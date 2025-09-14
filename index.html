@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
     <title>Kalpats Family Tree</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +20,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style type="text/css">
+      /* Force dark mode colors for compatibility on all devices */
+      html.dark {
+        color-scheme: dark;
+      }
+      .dark body {
+        background-color: #0f172a; /* slate-900 */
+        color: #f8fafc; /* slate-50 */
+      }
+
       body {
         overscroll-behavior: none;
         font-family: 'Gruppo', sans-serif;
@@ -135,7 +145,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 dark:bg-slate-900">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

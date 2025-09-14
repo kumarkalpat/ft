@@ -230,7 +230,7 @@ const App: React.FC = () => {
   }, [focusedPersonId, roots, peopleMap]);
 
   return (
-    <div className="antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 dark:text-white h-screen w-screen overflow-hidden flex flex-col">
+    <div className="antialiased text-slate-900 bg-slate-50 dark:bg-slate-900 h-screen w-screen overflow-hidden flex flex-col">
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
