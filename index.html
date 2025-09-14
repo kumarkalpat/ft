@@ -13,12 +13,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
-      // Apply dark mode immediately to prevent FOUC (Flash of Unstyled Content)
-      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+      // Force dark mode on initial load
+      document.documentElement.classList.add('dark');
     </script>
     
     <style type="text/css">
