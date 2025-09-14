@@ -274,8 +274,11 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
   };
   
   const handleTouchMove = (e: React.TouchEvent) => {
-    // Prevent default browser actions like scrolling/zooming when we are handling the gesture.
-    e.preventDefault();
+    // If we're actively panning or pinching, prevent the browser's default behavior.
+    const isActionableGesture = (e.touches.length === 1 && lastPanPosition.current) || (e.touches.length === 2 && lastPinchDistance.current);
+    if (isActionableGesture) {
+        e.preventDefault();
+    }
 
     // If we move significantly, it's a drag/pinch, not a tap.
     if (!hasMovedRef.current && touchStartPosRef.current && e.touches.length === 1) {
