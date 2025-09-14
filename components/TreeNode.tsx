@@ -46,7 +46,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
           tabIndex={0}
           aria-label={`View details for ${person.name}`}
           className={`
-            p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800
+            p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
             ${isSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
           `}
         >
@@ -56,7 +56,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             alt={person.name}
             className="w-20 h-20 rounded-full object-cover flex-shrink-0"
           />
-          <div className="mt-2 flex-grow flex flex-col justify-center">
+          <div className="mt-1 flex-grow flex flex-col justify-center">
             <p className="font-semibold text-sm w-full" title={person.name}>
               {person.name}
             </p>
@@ -84,7 +84,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             tabIndex={0}
             aria-label={`View details for ${person.spouse.name}`}
             className={`
-              p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800
+              p-2 rounded-lg cursor-pointer transition-all w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
               ${isSpouseSelected ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl' : 'shadow-xl hover:shadow-2xl hover:scale-105'}
             `}
           >
@@ -94,7 +94,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
               alt={person.spouse.name}
               className="w-20 h-20 rounded-full object-cover flex-shrink-0"
             />
-             <div className="mt-2 flex-grow flex flex-col justify-center">
+             <div className="mt-1 flex-grow flex flex-col justify-center">
                 <p className="font-semibold text-sm w-full" title={person.spouse.name}>
                 {person.spouse.name}
                 </p>
