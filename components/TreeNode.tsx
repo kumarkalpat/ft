@@ -51,7 +51,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
     >
       
       {/* The person and their spouse */}
-      <div className="flex items-center">
+      <div className="flex items-end gap-2">
         <div
           onClick={() => onFocusPerson(person)}
           onDoubleClick={() => onShowDetails(person)}
@@ -96,8 +96,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
         {person.spouse && (
            // This container animates its width to smoothly make space for the spouse card.
           <div className={`
-            overflow-hidden transition-[max-width,margin] duration-700 ease-in-out
-            ${isSpouseVisible ? 'max-w-40 ml-2' : 'max-w-0 ml-0'}
+            overflow-hidden transition-[max-width] duration-700 ease-in-out
+            ${isSpouseVisible ? 'max-w-40' : 'max-w-0'}
           `}>
              {/* This inner div handles the visual animation of the card itself. */}
             <div

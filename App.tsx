@@ -80,20 +80,21 @@ const App: React.FC = () => {
     }
     
     // 1. Build a structured list of generations using Breadth-First Search (BFS).
-    // This correctly handles DAGs where a person/family unit can appear in multiple branches (e.g. cousin marriages).
+    // This de-duplicates at each level to prevent animation repetitions in complex trees (e.g., cousin marriages).
     const generations: Person[][] = [];
     if (roots.length > 0) {
         let currentGeneration = [...roots];
 
         while (currentGeneration.length > 0) {
             generations.push(currentGeneration);
-            const nextGeneration: Person[] = [];
+            
+            const nextGenerationMap = new Map<string, Person>();
             for (const person of currentGeneration) {
                 for (const child of person.children) {
-                    nextGeneration.push(child);
+                    nextGenerationMap.set(child.id, child);
                 }
             }
-            currentGeneration = nextGeneration;
+            currentGeneration = Array.from(nextGenerationMap.values());
         }
     }
     
