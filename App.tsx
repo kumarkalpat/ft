@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { FamilyTree, FamilyTreeHandle, MinimapViewport } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
@@ -25,6 +25,12 @@ const App: React.FC = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
+  const [visibleNodeIds, setVisibleNodeIds] = useState<Set<string>>(new Set());
+  const [spouseVisibleFor, setSpouseVisibleFor] = useState<Set<string>>(new Set());
+  const [isInitialAnimationComplete, setIsInitialAnimationComplete] = useState(false);
+  const [personToFocusForAnimation, setPersonToFocusForAnimation] = useState<string | null>(null);
+
+
   const treeRef = useRef<FamilyTreeHandle>(null);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
@@ -45,17 +51,114 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-      if (peopleMap.size > 0) {
+      if (peopleMap.size > 0 && !isInitialAnimationComplete) {
         const params = new URLSearchParams(window.location.search);
         const focusId = params.get('focusedPersonId');
         if (focusId && peopleMap.has(focusId)) {
             const person = peopleMap.get(focusId);
             if (person) handleNodeClick(person);
+            // If deep-linking, skip animation and show all nodes.
+            const allIds = new Set<string>(peopleMap.keys());
+            setVisibleNodeIds(allIds);
+            setSpouseVisibleFor(allIds);
+            setIsInitialAnimationComplete(true);
         }
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [peopleMap]); // This should only run once when peopleMap is ready.
+  }, [peopleMap, isInitialAnimationComplete]);
   
+  // Effect to manage the initial reveal animation
+  useEffect(() => {
+    if (loading || error || roots.length === 0 || isInitialAnimationComplete) {
+        if(!loading && !error && !isInitialAnimationComplete && peopleMap.size > 0){
+            const allIds = new Set<string>(peopleMap.keys());
+            setVisibleNodeIds(allIds);
+            setSpouseVisibleFor(allIds);
+            setIsInitialAnimationComplete(true);
+        }
+        return;
+    }
+    
+    // 1. Build a structured list of generations using Breadth-First Search (BFS).
+    // This correctly handles DAGs where a person/family unit can appear in multiple branches (e.g. cousin marriages).
+    const generations: Person[][] = [];
+    if (roots.length > 0) {
+        let currentGeneration = [...roots];
+
+        while (currentGeneration.length > 0) {
+            generations.push(currentGeneration);
+            const nextGeneration: Person[] = [];
+            for (const person of currentGeneration) {
+                for (const child of person.children) {
+                    nextGeneration.push(child);
+                }
+            }
+            currentGeneration = nextGeneration;
+        }
+    }
+    
+    // 2. Create a flat list of actions from the structured generations.
+    const actions: { type: 'REVEAL_PEOPLE' | 'REVEAL_SPOUSES'; ids: string[]; focusId: string }[] = [];
+    if (generations.length > 0) {
+        const rootsGen = generations[0];
+        actions.push({ type: 'REVEAL_PEOPLE', ids: rootsGen.map(p => p.id), focusId: rootsGen[0].id });
+        const rootSpousesIds = rootsGen.filter(p => p.spouse).map(p => p.id);
+        if (rootSpousesIds.length > 0) {
+            actions.push({ type: 'REVEAL_SPOUSES', ids: rootSpousesIds, focusId: rootsGen[0].id });
+        }
+
+        for (let i = 1; i < generations.length; i++) {
+            const generation = generations[i];
+            for (const person of generation) {
+                actions.push({ type: 'REVEAL_PEOPLE', ids: [person.id], focusId: person.id });
+            }
+            const peopleWithSpouses = generation.filter(p => p.spouse);
+            for (const person of peopleWithSpouses) {
+                actions.push({ type: 'REVEAL_SPOUSES', ids: [person.id], focusId: person.id });
+            }
+        }
+    }
+
+    const animationDelay = 1000;
+    let isCancelled = false;
+
+    const runAnimation = async () => {
+        for (const action of actions) {
+            if (isCancelled) break;
+
+            if (action.type === 'REVEAL_PEOPLE') {
+                setVisibleNodeIds(prev => new Set([...prev, ...action.ids]));
+            } else {
+                setSpouseVisibleFor(prev => new Set([...prev, ...action.ids]));
+            }
+            
+            setPersonToFocusForAnimation(action.focusId);
+
+            await new Promise(resolve => setTimeout(resolve, animationDelay));
+        }
+        if (!isCancelled) {
+            setIsInitialAnimationComplete(true);
+            setPersonToFocusForAnimation(null);
+            treeRef.current?.panToTop();
+        }
+    };
+
+    runAnimation();
+
+    return () => {
+        isCancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, error, roots, peopleMap, isInitialAnimationComplete]);
+
+  // This effect reliably pans the view AFTER the DOM has been updated with the new node.
+  useLayoutEffect(() => {
+    if (personToFocusForAnimation) {
+        treeRef.current?.panToPerson(personToFocusForAnimation);
+    }
+  }, [personToFocusForAnimation]);
+
+
   useEffect(() => {
     if (!focusedPersonId || !peopleMap.size) {
         setHighlightedIds(new Set());
@@ -97,33 +200,24 @@ const App: React.FC = () => {
     if (!fullPerson) return;
     setSearchQuery('');
 
-    // If we're clicking the same person that's already fully selected, do nothing.
     if (selectedPerson?.id === fullPerson.id) {
         return;
     }
 
-    // This is the key insight: if another person's details are open, we must
-    // first reset the view completely before focusing on the new person.
-    // The `setTimeout` ensures this happens in a separate render cycle, avoiding race conditions.
     if (selectedPerson) {
-        // Step 1: Reset the view by closing the sidebar and clearing focus.
         setSelectedPerson(null);
         setFocusedPersonId(null);
-
-        // Step 2: Schedule the new focus to happen after the UI has reset.
         setTimeout(() => {
             setSelectedPerson(fullPerson);
             setFocusedPersonId(fullPerson.id);
-        }, 100); // A small delay is more robust than 0 for CSS animations to finish.
+        }, 100);
     } else {
-        // If no one was selected, we can set the focus directly.
         setSelectedPerson(fullPerson);
         setFocusedPersonId(fullPerson.id);
     }
   }, [peopleMap, selectedPerson]);
   
   const handleFocusToggle = useCallback((person: Person) => {
-    // Toggling focus: if the person is already focused, clear it. Otherwise, focus them.
     if (focusedPersonId === person.id) {
         setFocusedPersonId(null);
         setSelectedPerson(null);
@@ -133,7 +227,6 @@ const App: React.FC = () => {
   }, [focusedPersonId, handleNodeClick]);
 
   const handleShowDetails = useCallback((person: Person) => {
-    // A double-tap (or any explicit "show details" action) should always use the main, robust click handler.
     handleNodeClick(person);
   }, [handleNodeClick]);
 
@@ -141,11 +234,17 @@ const App: React.FC = () => {
     setSelectedPerson(null);
   };
   
-  const handleClearFocus = () => {
+  const handleClearFocus = useCallback(() => {
       setFocusedPersonId(null);
       setSelectedPerson(null);
-      treeRef.current?.panToTop();
-  };
+      
+      if (peopleMap.size > 0) {
+        setVisibleNodeIds(new Set());
+        setSpouseVisibleFor(new Set());
+        setIsInitialAnimationComplete(false);
+        setPersonToFocusForAnimation(null);
+      }
+  }, [peopleMap]);
   
   const handleExportPdf = async () => {
       const treeElement = document.querySelector('.tree-content') as HTMLElement;
@@ -329,6 +428,10 @@ const App: React.FC = () => {
                     isInFocusMode={!!focusedPersonId}
                     isSidebarVisible={!!selectedPerson}
                     onViewportUpdate={handleViewportUpdate}
+                    visibleNodeIds={visibleNodeIds}
+                    spouseVisibleFor={spouseVisibleFor}
+                    isAnimating={!isInitialAnimationComplete}
+                    onResetView={handleClearFocus}
                 />
             )}
             {!loading && !error && displayedRoots.length === 0 && (

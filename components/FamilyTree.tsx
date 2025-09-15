@@ -26,9 +26,13 @@ interface FamilyTreeProps {
   peopleMap: Map<string, Person>;
   isSidebarVisible: boolean;
   onViewportUpdate: (viewport: MinimapViewport) => void;
+  visibleNodeIds: Set<string>;
+  spouseVisibleFor: Set<string>;
+  isAnimating: boolean;
+  onResetView: () => void;
 }
 
-export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({ roots, onFocusPerson, onShowDetails, selectedPersonId, focusedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible, onViewportUpdate }, ref) => {
+export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({ roots, onFocusPerson, onShowDetails, selectedPersonId, focusedPersonId, highlightedIds, isInFocusMode, peopleMap, isSidebarVisible, onViewportUpdate, visibleNodeIds, spouseVisibleFor, isAnimating, onResetView }, ref) => {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -38,6 +42,12 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
 
   const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  // Use refs to access latest pan/scale in callbacks without creating dependency loops
+  const panRef = useRef(pan);
+  panRef.current = pan;
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
   
   // Refs for touch interactions
   const lastPanPosition = useRef<{ x: number, y: number } | null>(null);
@@ -78,54 +88,89 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
 
   const panToTop = useCallback(() => {
     if (!containerRef.current || !contentRef.current) return;
-    
+
     const isMobile = window.innerWidth < 768;
     const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0;
 
-    const containerWidth = containerRef.current.offsetWidth - sidebarWidth;
-    const contentWidth = contentRef.current.scrollWidth;
+    const container = containerRef.current;
+    const content = contentRef.current;
 
-    if (contentWidth === 0) {
-      requestAnimationFrame(panToTop);
+    const containerWidth = container.offsetWidth - sidebarWidth;
+    const containerHeight = container.offsetHeight;
+
+    const contentWidth = content.scrollWidth;
+    const contentHeight = content.scrollHeight;
+
+    if (contentWidth === 0 || containerWidth === 0 || contentHeight === 0 || containerHeight === 0) {
+      // If dimensions are not ready, retry on the next frame.
+      requestAnimationFrame(() => panToTop());
       return;
     }
 
-    const newScale = 1.0;
-    const newX = (containerWidth - contentWidth * newScale) / 2;
-    const newY = 80; // Apply top padding
+    const PADDING_FACTOR = 0.95; // Use a bit more of the screen
 
-    if (isNaN(newScale) || isNaN(newX) || isNaN(newY)) {
-        return;
+    // Calculate scale based on fitting the height only.
+    const scaleY = containerHeight / contentHeight;
+    const newScale = scaleY * PADDING_FACTOR;
+
+    // Clamp the scale to prevent it from becoming too small or too large automatically.
+    // We cap at 1.0 to avoid zooming in past the natural size on short trees.
+    const clampedScale = Math.max(0.2, Math.min(newScale, 1.0));
+
+    // Center horizontally. The content may overflow if it's wider than the container.
+    const newX = (containerWidth - (contentWidth * clampedScale)) / 2;
+
+    // Align to the top with a bit of padding instead of centering vertically.
+    const TOP_PADDING = 40; // 40px padding from the top
+    const newY = TOP_PADDING;
+
+    if (isNaN(clampedScale) || isNaN(newX) || isNaN(newY)) {
+      console.warn("panToTop calculation resulted in NaN. Bailing out.", { clampedScale, newX, newY });
+      return;
     }
 
-    setScale(newScale);
+    setScale(clampedScale);
     setPan({ x: newX, y: newY });
   }, [isSidebarVisible]);
 
   const panToPerson = useCallback((personId: string) => {
     if (!containerRef.current || !contentRef.current) return;
-    
+
     const personNode = contentRef.current.querySelector(`[data-id='${personId}']`) as HTMLElement;
     if (!personNode) {
-      console.warn(`panToPerson: Could not find node with id ${personId}. It might not be rendered yet.`);
+      // The node might not be in the DOM yet. Retry on the next animation frame.
+      requestAnimationFrame(() => panToPerson(personId));
       return;
     }
 
     const container = containerRef.current;
     
+    // Calculate the node's unscaled position relative to the content area using a robust method.
+    const containerRect = container.getBoundingClientRect();
+    const nodeRect = personNode.getBoundingClientRect();
+    const currentPan = panRef.current;
+    const currentScale = scaleRef.current;
+
+    const nodeUnscaledLeft = (nodeRect.left - containerRect.left - currentPan.x) / currentScale;
+    const nodeUnscaledTop = (nodeRect.top - containerRect.top - currentPan.y) / currentScale;
+
+    const nodeUnscaledWidth = personNode.offsetWidth;
+    const nodeUnscaledHeight = personNode.offsetHeight;
+
+    // Determine available viewport size, accounting for the sidebar
     const isMobile = window.innerWidth < 768;
     const sidebarWidth = isSidebarVisible && !isMobile ? 384 : 0;
     const availableWidth = container.offsetWidth - sidebarWidth;
     const availableHeight = container.offsetHeight;
 
+    // We want to pan to a view with 100% scale for focus
     const newScale = 1.0;
-    
-    // Center horizontally
-    const newX = (availableWidth / 2) - (personNode.offsetLeft + personNode.offsetWidth / 2) * newScale;
-    
-    // Center vertically
-    const newY = (availableHeight / 2) - (personNode.offsetTop + personNode.offsetHeight / 2) * newScale;
 
+    // Calculate the new pan values to center the node in the available space
+    const newX = (availableWidth / 2) - (nodeUnscaledLeft + nodeUnscaledWidth / 2) * newScale;
+    const newY = (availableHeight / 2) - (nodeUnscaledTop + nodeUnscaledHeight / 2) * newScale;
+
+    // Apply the new scale and pan
     setScale(newScale);
     setPan({ x: newX, y: newY });
   }, [isSidebarVisible]);
@@ -182,14 +227,14 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
   }, [containerSize, contentSize, pan, scale, onViewportUpdate]);
 
 
-  // Initial positioning when roots are ready or focus is cleared
+  // Initial positioning when focus is cleared (but not during initial animation)
   useLayoutEffect(() => {
-    if (roots.length > 0 && !isInFocusMode) {
+    if (roots.length > 0 && !isInFocusMode && !isAnimating) {
       // Delay to ensure DOM is ready for measurement
       const timeoutId = setTimeout(() => panToTop(), 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [roots, isInFocusMode, panToTop]);
+  }, [roots, isInFocusMode, panToTop, isAnimating]);
 
   // Resize handling
   useEffect(() => {
@@ -375,13 +420,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
 
   const zoomIn = () => setScale(s => Math.min(s * 1.2, 3));
   const zoomOut = () => setScale(s => Math.max(s / 1.2, 0.2));
-  const reset = () => {
-    if (isInFocusMode && selectedPersonId) {
-        panToPerson(selectedPersonId);
-    } else {
-        panToTop();
-    }
-  };
+  const reset = onResetView;
 
   return (
     <div 
@@ -399,7 +438,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
     >
       <div 
         ref={contentRef}
-        className="inline-flex tree tree-content"
+        className="inline-flex tree tree-content pb-8"
         style={{ 
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: '0 0',
@@ -407,7 +446,7 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
             transition: isPanning ? 'none' : 'transform 0.3s ease-out',
         }}
       >
-        <ul className="flex justify-center items-start px-16 pb-8">
+        <ul className="flex justify-center items-start px-16">
             {roots.map(root => (
                 <TreeNode 
                   key={root.id} 
@@ -417,6 +456,8 @@ export const FamilyTree = React.forwardRef<FamilyTreeHandle, FamilyTreeProps>(({
                   selectedPersonId={selectedPersonId}
                   highlightedIds={highlightedIds}
                   isInFocusMode={isInFocusMode}
+                  visibleNodeIds={visibleNodeIds}
+                  spouseVisibleFor={spouseVisibleFor}
                 />
             ))}
         </ul>
