@@ -121,6 +121,7 @@ const App: React.FC = () => {
 
     const animationDelay = 1000;
     let isCancelled = false;
+    let timeoutId: number;
 
     const runAnimation = async () => {
         for (const action of actions) {
@@ -134,7 +135,9 @@ const App: React.FC = () => {
             
             setPersonToFocusForAnimation(action.focusId);
 
-            await new Promise(resolve => setTimeout(resolve, animationDelay));
+            await new Promise(resolve => {
+              timeoutId = window.setTimeout(resolve, animationDelay);
+            });
         }
         if (!isCancelled) {
             setIsInitialAnimationComplete(true);
@@ -147,6 +150,7 @@ const App: React.FC = () => {
 
     return () => {
         isCancelled = true;
+        clearTimeout(timeoutId);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, error, roots, peopleMap, isInitialAnimationComplete]);
@@ -245,6 +249,16 @@ const App: React.FC = () => {
         setPersonToFocusForAnimation(null);
       }
   }, [peopleMap]);
+
+  const handleSkipAnimation = useCallback(() => {
+    const allIds = new Set<string>(peopleMap.keys());
+    setVisibleNodeIds(allIds);
+    setSpouseVisibleFor(allIds);
+    setPersonToFocusForAnimation(null);
+    // Setting this to true will stop the animation effect and trigger
+    // the FamilyTree to pan to the top overview.
+    setIsInitialAnimationComplete(true);
+  }, [peopleMap]);
   
   const handleExportPdf = async () => {
       const treeElement = document.querySelector('.tree-content') as HTMLElement;
@@ -327,6 +341,8 @@ const App: React.FC = () => {
 
     return fatherClone ? [fatherClone] : [motherClone!];
   }, [focusedPersonId, roots, peopleMap]);
+
+  const isAnimating = !isInitialAnimationComplete;
 
   return (
     <div className="antialiased h-screen w-screen overflow-hidden flex flex-col">
@@ -415,6 +431,16 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
+            {isAnimating && !loading && !error && (
+              <div className="absolute top-4 right-4 z-20">
+                  <button
+                      onClick={handleSkipAnimation}
+                      className="px-4 py-2 bg-black/60 text-white rounded-full backdrop-blur-sm hover:bg-black/80 transition-colors shadow-lg"
+                  >
+                      Skip Animation
+                  </button>
+              </div>
+            )}
             {!loading && !error && displayedRoots.length > 0 && (
                 <FamilyTree 
                     ref={treeRef}
@@ -430,7 +456,7 @@ const App: React.FC = () => {
                     onViewportUpdate={handleViewportUpdate}
                     visibleNodeIds={visibleNodeIds}
                     spouseVisibleFor={spouseVisibleFor}
-                    isAnimating={!isInitialAnimationComplete}
+                    isAnimating={isAnimating}
                     onResetView={handleClearFocus}
                 />
             )}
