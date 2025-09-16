@@ -239,24 +239,22 @@ const App: React.FC = () => {
         }
     }
     
-    // 2. Create a flat list of actions from the structured generations.
+    // 2. Create a flat list of actions that reveals each person and then their spouse, one by one.
     const actions: { type: 'REVEAL_PEOPLE' | 'REVEAL_SPOUSES'; ids: string[]; focusId: string }[] = [];
     if (generations.length > 0) {
-        const rootsGen = generations[0];
-        actions.push({ type: 'REVEAL_PEOPLE', ids: rootsGen.map(p => p.id), focusId: rootsGen[0].id });
-        const rootSpousesIds = rootsGen.filter(p => p.spouse).map(p => p.id);
-        if (rootSpousesIds.length > 0) {
-            actions.push({ type: 'REVEAL_SPOUSES', ids: rootSpousesIds, focusId: rootsGen[0].id });
-        }
-
-        for (let i = 1; i < generations.length; i++) {
-            const generation = generations[i];
+        const visited = new Set<string>();
+        for (const generation of generations) {
             for (const person of generation) {
+                if (visited.has(person.id)) continue;
+                
+                // Reveal the person.
                 actions.push({ type: 'REVEAL_PEOPLE', ids: [person.id], focusId: person.id });
-            }
-            const peopleWithSpouses = generation.filter(p => p.spouse);
-            for (const person of peopleWithSpouses) {
-                actions.push({ type: 'REVEAL_SPOUSES', ids: [person.id], focusId: person.id });
+                visited.add(person.id);
+
+                // If they have a spouse, reveal the spouse immediately after.
+                if (person.spouse) {
+                    actions.push({ type: 'REVEAL_SPOUSES', ids: [person.id], focusId: person.id });
+                }
             }
         }
     }
