@@ -5,11 +5,13 @@ declare global {
   interface ImportMeta {
     readonly env: {
       readonly VITE_SHEET_URL?: string;
+      readonly VITE_CONFIG_SHEET_URL?: string;
     };
   }
 }
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
+import Papa from 'papaparse';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { FamilyTree, FamilyTreeHandle, MinimapViewport } from './components/FamilyTree';
 import { PersonDetails } from './components/PersonDetails';
@@ -17,10 +19,10 @@ import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
 import { Minimap } from './components/Minimap';
 
-// A public Google Sheet URL to be used for local development and in any preview
-// environment (like AI Studio) where a Vercel environment variable is not available.
-// This ensures the app is always functional for testing and previewing.
+// Fallback URL for the main family data (Sheet 1).
 const FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
+// Fallback URL for the app configuration (Sheet 2).
+const FALLBACK_CONFIG_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=1344337429&single=true&output=csv';
 
 const fallbackData = `id,fatherID,motherID,spouseID,name,alias,gender,birthDate,birthPlace,marriageDate,marriagePlace,deathDate,imageUrl
 1,,,2,John Kalpat,Johnny,Male,1950-01-01,New York,1974-06-15,New York,2020-12-25,https://ui-avatars.com/api/?name=John+Kalpat
@@ -30,8 +32,12 @@ const fallbackData = `id,fatherID,motherID,spouseID,name,alias,gender,birthDate,
 5,3,4,,David Kalpat,,Male,2000-06-25,Miami,,,,https://ui-avatars.com/api/?name=David+Kalpat
 `;
 
+// Embedded fallback data for app configuration (title, logo).
+const fallbackConfigData = `appTitle,logoUrl\n"Kalpats Family Tree","https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs"`;
+
 // This logic determines which Google Sheet to load and sets a label for debugging.
 const SHEET_URL = import.meta.env?.VITE_SHEET_URL || FALLBACK_SHEET_URL;
+const CONFIG_SHEET_URL = import.meta.env?.VITE_CONFIG_SHEET_URL || FALLBACK_CONFIG_SHEET_URL;
 const dataSourceLabel = import.meta.env?.VITE_SHEET_URL ? 'Vercel Environment Variable' : 'Fallback URL';
 
 
@@ -47,6 +53,11 @@ const App: React.FC = () => {
   const [spouseVisibleFor, setSpouseVisibleFor] = useState<Set<string>>(new Set());
   const [isInitialAnimationComplete, setIsInitialAnimationComplete] = useState(false);
   const [personToFocusForAnimation, setPersonToFocusForAnimation] = useState<string | null>(null);
+  
+  const [appConfig, setAppConfig] = useState({
+    title: 'Family Tree',
+    logoUrl: 'https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs'
+  });
 
 
   const treeRef = useRef<FamilyTreeHandle>(null);
@@ -59,6 +70,62 @@ const App: React.FC = () => {
     pan: { x: 0, y: 0 },
     scale: 1,
   });
+
+  // Effect to fetch application configuration from Sheet 2
+  useEffect(() => {
+    const parseAndSetConfig = (csvText: string) => {
+        try {
+            const parsed = Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                transformHeader: header => header.trim(),
+            });
+            
+            const configData = parsed.data[0] as { appTitle?: string; logoUrl?: string };
+            if (configData) {
+                setAppConfig(prev => ({
+                    title: configData.appTitle || prev.title,
+                    logoUrl: configData.logoUrl || prev.logoUrl
+                }));
+            }
+        } catch (e) {
+            console.error("Failed to parse config data:", e);
+        }
+    };
+
+    const loadConfig = async () => {
+        const isUsingVercelUrl = !!import.meta.env?.VITE_CONFIG_SHEET_URL;
+
+        if (isUsingVercelUrl) {
+            try {
+                const response = await fetch(CONFIG_SHEET_URL);
+                if (!response.ok) {
+                    throw new Error(`Status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                parseAndSetConfig(csvText);
+            } catch (error) {
+                console.error(`Error fetching app config from ${CONFIG_SHEET_URL}:`, error);
+                // Graceful degradation for Vercel: if the config fetch fails, keep the default.
+            }
+        } else {
+            // For local/preview, directly use the embedded fallback data.
+            // This avoids any network request and fixes the "Failed to fetch" error.
+            parseAndSetConfig(fallbackConfigData);
+        }
+    };
+
+    loadConfig();
+  }, [CONFIG_SHEET_URL]);
+
+  // Effect to update the document title and favicon when config changes
+  useEffect(() => {
+      document.title = appConfig.title;
+      const favicon = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+      if (favicon && appConfig.logoUrl) {
+          favicon.href = appConfig.logoUrl;
+      }
+  }, [appConfig.title, appConfig.logoUrl]);
 
   const handleViewportUpdate = useCallback((viewport: MinimapViewport) => {
       setMinimapViewport(viewport);
@@ -368,8 +435,8 @@ const App: React.FC = () => {
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <img src="https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs" alt="Kalpats Family Tree Logo" className="h-8 w-8 object-contain" />
-                  <h1 className="hidden sm:inline text-lg sm:text-xl font-bold">Kalpats Family Tree</h1>
+                  <img src={appConfig.logoUrl} alt={`${appConfig.title} Logo`} className="h-8 w-8 object-contain" />
+                  <h1 className="hidden sm:inline text-lg sm:text-xl font-bold">{appConfig.title}</h1>
                 </div>
                 
                 <div className="flex-1 flex justify-center">
