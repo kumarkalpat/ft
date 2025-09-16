@@ -30,10 +30,9 @@ const fallbackData = `id,fatherID,motherID,spouseID,name,alias,gender,birthDate,
 5,3,4,,David Kalpat,,Male,2000-06-25,Miami,,,,https://ui-avatars.com/api/?name=David+Kalpat
 `;
 
-// This logic determines which Google Sheet to load:
-// 1. When deployed (e.g., on Vercel), it uses the `VITE_SHEET_URL` environment variable if it exists.
-// 2. For local development or any preview environment where the variable is not set, it uses `FALLBACK_SHEET_URL`.
+// This logic determines which Google Sheet to load and sets a label for debugging.
 const SHEET_URL = import.meta.env?.VITE_SHEET_URL || FALLBACK_SHEET_URL;
+const dataSourceLabel = import.meta.env?.VITE_SHEET_URL ? 'Vercel Environment Variable' : 'Fallback URL';
 
 
 const App: React.FC = () => {
@@ -503,6 +502,11 @@ const App: React.FC = () => {
                 peopleMap={peopleMap}
              />
         </main>
+
+        {/* Data Source Indicator for Debugging */}
+        <div className="fixed bottom-2 left-2 z-50 px-3 py-1 bg-slate-800/80 text-white text-xs rounded-full backdrop-blur-sm shadow-lg">
+           Data Source: <strong>{dataSourceLabel}</strong>
+       </div>
     </div>
   );
 };
