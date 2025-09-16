@@ -1,5 +1,13 @@
-// FIX: Add a triple-slash directive to include Vite's client types, which resolves the TypeScript error for `import.meta.env`.
-/// <reference types="vite/client" />
+// FIX: To correctly augment the global `ImportMeta` type within a module,
+// the declaration must be wrapped in `declare global`. This prevents creating a local
+// type that shadows the global one and ensures TypeScript recognizes `import.meta.env`.
+declare global {
+  interface ImportMeta {
+    readonly env: {
+      readonly VITE_SHEET_URL?: string;
+    };
+  }
+}
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
@@ -9,16 +17,24 @@ import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
 import { Minimap } from './components/Minimap';
 
-const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDate,bio
-1,John Doe,Male,,,2,https://ui-avatars.com/api/?name=John+Doe,1950-01-01,Founder of the Doe family.
-2,Jane Smith,Female,,,1,https://ui-avatars.com/api/?name=Jane+Smith,1952-05-10,Matriarch of the Doe family.
-3,Peter Doe,Male,1,2,4,https://ui-avatars.com/api/?name=Peter+Doe,1975-03-20,Eldest son of John and Jane.
-4,Mary Johnson,Female,,,3,https://ui-avatars.com/api/?name=Mary+Johnson,1976-11-15,Wife of Peter Doe.
-5,Susan Doe,Female,1,2,,https://ui-avatars.com/api/?name=Susan+Doe,1980-08-05,Youngest daughter of John and Jane.
-6,David Doe,Male,3,4,,,https://ui-avatars.com/api/?name=David+Doe,2000-06-25,Son of Peter and Mary.
+// A public Google Sheet URL to be used for local development and in any preview
+// environment (like AI Studio) where a Vercel environment variable is not available.
+// This ensures the app is always functional for testing and previewing.
+const FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
+
+const fallbackData = `id,fatherID,motherID,spouseID,name,alias,gender,birthDate,birthPlace,marriageDate,marriagePlace,deathDate,imageUrl
+1,,,2,John Kalpat,Johnny,Male,1950-01-01,New York,1974-06-15,New York,2020-12-25,https://ui-avatars.com/api/?name=John+Kalpat
+2,,,1,Jane Doe,,Female,1952-05-10,Boston,1974-06-15,New York,,https://ui-avatars.com/api/?name=Jane+Doe
+3,1,2,4,Peter Kalpat,,Male,1975-03-20,New York,1999-09-01,Miami,,https://ui-avatars.com/api/?name=Peter+Kalpat
+4,,,3,Mary Johnson,,Female,1976-11-15,Chicago,1999-09-01,Miami,,https://ui-avatars.com/api/?name=Mary+Johnson
+5,3,4,,David Kalpat,,Male,2000-06-25,Miami,,,,https://ui-avatars.com/api/?name=David+Kalpat
 `;
 
-const SHEET_URL = import.meta.env.VITE_SHEET_URL;
+// This logic determines which Google Sheet to load:
+// 1. When deployed (e.g., on Vercel), it uses the `VITE_SHEET_URL` environment variable if it exists.
+// 2. For local development or any preview environment where the variable is not set, it uses `FALLBACK_SHEET_URL`.
+const SHEET_URL = import.meta.env?.VITE_SHEET_URL || FALLBACK_SHEET_URL;
+
 
 const App: React.FC = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);

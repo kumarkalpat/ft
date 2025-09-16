@@ -23,11 +23,7 @@ export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string)
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
-      const processData = (csvData: string) => {
+    const processData = (csvData: string) => {
         try {
           const parsed = Papa.parse(csvData, {
             header: true,
@@ -37,7 +33,13 @@ export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string)
 
           if (parsed.errors.length > 0) {
               console.error("Parsing errors:", parsed.errors);
-              throw new Error(`CSV Parsing Error: ${parsed.errors[0].message}`);
+              const firstError = parsed.errors[0];
+              let detailedMessage = `CSV Parsing Error: ${firstError.message}`;
+              if (firstError.code === 'TooManyFields') {
+                  // row is 0-indexed, and header is row 0, so data starts at sheet row 2.
+                  detailedMessage = `The data in your Google Sheet seems to be misformatted on row ${firstError.row + 2}. The error is: "${firstError.message}". This is often caused by an extra comma in a field like 'bio' that isn't enclosed in double quotes. Please check that row in your sheet.`;
+              }
+              throw new Error(detailedMessage);
           }
           
           const rawPeople = parsed.data as any[];
@@ -59,31 +61,46 @@ export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string)
             .filter((p): p is Person => p !== null);
 
             setPeople(validPeople);
+            setError(null); // Clear error on successful parse
 
         } catch (e: any) {
-          setError(`Failed to parse data. Please check CSV format. Error: ${e.message}`);
+          setError(`Failed to parse data. ${e.message}`);
           setPeople([]);
-        } finally {
-            setLoading(false);
         }
       };
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
 
       if (sheetUrl) {
         try {
           const response = await fetch(sheetUrl);
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Could not load data from the URL (Status: ${response.status}). Please check the URL and ensure your sheet is public.`);
           }
+          
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+              throw new Error(`Invalid data format. Expected CSV data but received an HTML page. This usually means the Google Sheet is not public or the URL is incorrect. Please ensure your URL ends with '/export?format=csv' and that "Anyone with the link" can view the sheet.`);
+          }
+
           const csvText = await response.text();
           processData(csvText);
         } catch (e: any) {
-            console.error("Failed to fetch Google Sheet, using fallback.", e);
-            processData(fallbackCsv);
+            console.error("Failed to fetch or parse Google Sheet.", e);
+            setError(e.message || 'An unknown error occurred while fetching data.');
+            setPeople([]);
+        } finally {
+            setLoading(false);
         }
       } else {
+        // Use fallback data if no URL is provided
         processData(fallbackCsv);
+        setLoading(false);
       }
     };
+    
     fetchData();
   }, [sheetUrl, fallbackCsv]);
 
