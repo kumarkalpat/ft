@@ -17,7 +17,7 @@ const convertGoogleDriveUrl = (url: string): string => {
 };
 
 
-export const useFamilyTree = (sheetUrl: string, fallbackCsv: string) => {
+export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string) => {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

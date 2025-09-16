@@ -1,3 +1,6 @@
+// FIX: Add a triple-slash directive to include Vite's client types, which resolves the TypeScript error for `import.meta.env`.
+/// <reference types="vite/client" />
+
 import React, { useState, useCallback, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import { useFamilyTree } from './hooks/useFamilyTree';
 import { FamilyTree, FamilyTreeHandle, MinimapViewport } from './components/FamilyTree';
@@ -15,7 +18,7 @@ const fallbackData = `id,name,gender,fatherID,motherID,spouseID,imageUrl,birthDa
 6,David Doe,Male,3,4,,,https://ui-avatars.com/api/?name=David+Doe,2000-06-25,Son of Peter and Mary.
 `;
 
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
+const SHEET_URL = import.meta.env.VITE_SHEET_URL;
 
 const App: React.FC = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -120,7 +123,7 @@ const App: React.FC = () => {
         }
     }
 
-    const animationDelay = 1000;
+    const animationDelay = 750;
     let isCancelled = false;
     let timeoutId: number;
 
