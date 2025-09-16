@@ -512,7 +512,7 @@ const App: React.FC = () => {
                                             <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
                                                 <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                                                 <div>
-                                                    <p className="font-semibold whitespace-nowrap">{person.name}</p>
+                                                    <p className="font-semibold whitespace-nowrap text-slate-900 dark:text-white">{person.name}</p>
                                                     <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
                                                 </div>
                                             </button>

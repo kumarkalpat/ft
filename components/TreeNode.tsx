@@ -74,7 +74,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
             className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
           />
           <div className="mt-1 flex-grow flex flex-col justify-center">
-            <p className="font-semibold text-sm w-full" title={person.name}>
+            <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.name}>
               {person.name}
             </p>
             {person.alias && (
@@ -123,7 +123,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                 className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
               />
               <div className="mt-1 flex-grow flex flex-col justify-center">
-                  <p className="font-semibold text-sm w-full" title={person.spouse.name}>
+                  <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.spouse.name}>
                   {person.spouse.name}
                   </p>
                   {person.spouse.alias && (
