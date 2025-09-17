@@ -50,97 +50,99 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
         data-id={person.id}
     >
       
-      {/* The person and their spouse */}
-      <div className="flex items-center gap-2">
-        <div
-          onClick={() => onFocusPerson(person)}
-          onDoubleClick={() => onShowDetails(person)}
-          role="button"
-          tabIndex={0}
-          aria-label={`View details for ${person.name}`}
-          className={`
-            p-2 rounded-lg cursor-pointer w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-            transition-[transform,box-shadow,ring-width] duration-200 ease-in-out
-            ${isSelected 
-              ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]' 
-              : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]'
-            }
-          `}
-        >
-          <SecureImage
-            src={person.imageUrl}
-            name={person.name}
-            alt={person.name}
-            className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
-          />
-          <div className="mt-1 flex-grow flex flex-col justify-center">
-            <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.name}>
-              {person.name}
-            </p>
-            {person.alias && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic" title={person.alias}>
-                "{person.alias}"
-              </p>
-            )}
-            {person.birthDate && (
-              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                {person.deathDate
-                  ? `${new Date(person.birthDate).getFullYear()} - ${new Date(person.deathDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
-                  : `${new Date(person.birthDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
-                }
-              </p>
-            )}
-          </div>
-        </div>
-
-        {person.spouse && (
-           // This container animates its width to smoothly make space for the spouse card.
-          <div className={`
-            overflow-hidden transition-[max-width] duration-700 ease-in-out
-            ${isSpouseVisible ? 'max-w-40' : 'max-w-0'}
-          `}>
-             {/* This inner div handles the visual animation of the card itself. */}
+      {/* This symmetrical flex container centers the couple and ensures the connector above is aligned */}
+      <div className="flex items-start justify-center">
+        {/* Main Person Wrapper - provides padding for shadow */}
+        <div className="p-4">
             <div
-              onClick={() => onFocusPerson(person.spouse!)}
-              onDoubleClick={() => onShowDetails(person.spouse!)}
+              onClick={() => onFocusPerson(person)}
+              onDoubleClick={() => onShowDetails(person)}
               role="button"
               tabIndex={0}
-              aria-label={`View details for ${person.spouse.name}`}
+              aria-label={`View details for ${person.name}`}
               className={`
                 p-2 rounded-lg cursor-pointer w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-                transition-[opacity,transform,box-shadow,ring-width] duration-500 ease-out
-                ${isSpouseVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-                ${isSpouseSelected 
+                transition-[transform,box-shadow,ring-width] duration-200 ease-in-out relative z-10
+                ${isSelected 
                   ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]' 
-                  : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]'
+                  : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] hover:z-20'
                 }
               `}
             >
               <SecureImage
-                src={person.spouse.imageUrl}
-                name={person.spouse.name}
-                alt={person.spouse.name}
+                src={person.imageUrl}
+                name={person.name}
+                alt={person.name}
                 className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
               />
-              <div className="mt-1 flex-grow flex flex-col justify-center">
-                  <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.spouse.name}>
-                  {person.spouse.name}
+              <div className="mt-1 flex-grow flex flex-col justify-center w-full">
+                <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.name}>
+                  {person.name}
+                </p>
+                {person.alias && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate" title={person.alias}>
+                    "{person.alias}"
                   </p>
-                  {person.spouse.alias && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 italic" title={person.spouse.alias}>
-                      "{person.spouse.alias}"
-                    </p>
-                  )}
-                  {person.spouse.birthDate && (
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                      {person.spouse.deathDate
-                        ? `${new Date(person.spouse.birthDate).getFullYear()} - ${new Date(person.spouse.deathDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
-                        : `${new Date(person.spouse.birthDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
-                      }
+                )}
+                {person.birthDate && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {person.deathDate
+                      ? `${new Date(person.birthDate).getFullYear()} - ${new Date(person.deathDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                      : `${new Date(person.birthDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                    }
                   </p>
-                  )}
+                )}
               </div>
             </div>
+        </div>
+
+        {/* Spouse Card animated container */}
+        {person.spouse && (
+          <div className={`
+            p-4 overflow-hidden transition-[max-width,margin-left] duration-700 ease-in-out
+            ${isSpouseVisible ? 'max-w-48 -ml-6' : 'max-w-0 ml-0'}
+          `}>
+              <div
+                onClick={() => onFocusPerson(person.spouse!)}
+                onDoubleClick={() => onShowDetails(person.spouse!)}
+                role="button"
+                tabIndex={0}
+                aria-label={`View details for ${person.spouse.name}`}
+                className={`
+                  p-2 rounded-lg cursor-pointer w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
+                  transition-[opacity,transform,box-shadow,ring-width] duration-200 ease-in-out relative z-0
+                  ${isSpouseVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+                  ${isSpouseSelected 
+                    ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] z-10' 
+                    : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] hover:z-20'
+                  }
+                `}
+              >
+                <SecureImage
+                  src={person.spouse.imageUrl}
+                  name={person.spouse.name}
+                  alt={person.spouse.name}
+                  className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
+                />
+                <div className="mt-1 flex-grow flex flex-col justify-center w-full">
+                    <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.spouse.name}>
+                    {person.spouse.name}
+                    </p>
+                    {person.spouse.alias && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate" title={person.spouse.alias}>
+                        "{person.spouse.alias}"
+                      </p>
+                    )}
+                    {person.spouse.birthDate && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {person.spouse.deathDate
+                          ? `${new Date(person.spouse.birthDate).getFullYear()} - ${new Date(person.spouse.deathDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                          : `${new Date(person.spouse.birthDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                        }
+                    </p>
+                    )}
+                </div>
+              </div>
           </div>
         )}
       </div>
