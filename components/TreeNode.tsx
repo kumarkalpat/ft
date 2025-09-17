@@ -64,8 +64,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                 p-2 rounded-lg cursor-pointer w-40 h-48 flex flex-col items-center text-center justify-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
                 transition-[transform,box-shadow,ring-width] duration-200 ease-in-out relative z-10
                 ${isSelected 
-                  ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]' 
-                  : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] hover:z-20'
+                  ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl dark:shadow-2xl dark:shadow-black/25' 
+                  : 'shadow-lg dark:shadow-lg dark:shadow-black/25 hover:scale-105 hover:shadow-2xl hover:z-20'
                 }
               `}
             >
@@ -73,7 +73,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                 src={person.imageUrl}
                 name={person.name}
                 alt={person.name}
-                className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
+                className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-md border border-slate-200 dark:border-slate-600"
               />
               <div className="mt-1 flex-grow flex flex-col justify-center w-full">
                 <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.name}>
@@ -113,8 +113,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                   transition-[opacity,transform,box-shadow,ring-width] duration-200 ease-in-out relative z-0
                   ${isSpouseVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
                   ${isSpouseSelected 
-                    ? 'ring-2 ring-indigo-500 scale-105 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] z-10' 
-                    : 'shadow-[0_8px_16px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] hover:z-20'
+                    ? 'ring-2 ring-indigo-500 scale-105 shadow-2xl dark:shadow-2xl dark:shadow-black/25 z-10' 
+                    : 'shadow-lg dark:shadow-lg dark:shadow-black/25 hover:scale-105 hover:shadow-2xl hover:z-20'
                   }
                 `}
               >
@@ -122,7 +122,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                   src={person.spouse.imageUrl}
                   name={person.spouse.name}
                   alt={person.spouse.name}
-                  className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-[0_4px_8px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_8px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-600"
+                  className="w-24 h-24 rounded-full object-cover flex-shrink-0 shadow-md border border-slate-200 dark:border-slate-600"
                 />
                 <div className="mt-1 flex-grow flex flex-col justify-center w-full">
                     <p className="font-semibold text-sm w-full text-slate-900 dark:text-white" title={person.spouse.name}>

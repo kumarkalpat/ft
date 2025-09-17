@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF--8" />
     <link rel="icon" type="image/png" href="" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
@@ -81,7 +81,7 @@
         left: 50%;
         transform: translateX(-50%);
         width: 0;
-        height: 40px;
+        height: 20px; /* Corrected height to meet the children's connector line perfectly */
         border-left: 2px solid #94a3b8; /* slate-400 */
         filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
       }
@@ -97,7 +97,7 @@
       .tree ul ul li::after {
         content: '';
         position: absolute;
-        top: 0;
+        top: -20px; /* SHIFTED UP: Start lines higher to go behind card shadows */
         border-color: #94a3b8; /* slate-400 */
         border-style: solid;
         border-width: 0;
@@ -113,7 +113,7 @@
       .tree ul ul li:only-child::before {
         left: 50%;
         transform: translateX(-50%);
-        height: 40px;
+        height: 60px; /* INCREASED: Make line taller to reach connection point */
         border-left-width: 2px;
       }
 
@@ -121,7 +121,7 @@
       .tree ul ul li:not(:first-child):not(:last-child)::before {
         left: 50%;
         transform: translateX(-50%);
-        height: 40px;
+        height: 60px; /* INCREASED: Make line taller */
         border-left-width: 2px;
       }
       .tree ul ul li:not(:first-child):not(:last-child)::after {
@@ -134,7 +134,7 @@
       .tree ul ul li:first-child:not(:last-child)::after {
         left: 50%;
         width: 50%;
-        height: 40px;
+        height: 60px; /* INCREASED: Make line taller */
         border-top-width: 2px;
         border-left-width: 2px;
         border-top-left-radius: 1rem;
@@ -144,7 +144,7 @@
       .tree ul ul li:last-child:not(:first-child)::before {
         right: 50%;
         width: 50%;
-        height: 40px;
+        height: 60px; /* INCREASED: Make line taller */
         border-top-width: 2px;
         border-right-width: 2px;
         border-top-right-radius: 1rem;
