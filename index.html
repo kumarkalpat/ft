@@ -11,41 +11,46 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gruppo&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      // This must be loaded before the main tailwind script to configure it.
+      // Configure Tailwind CSS for class-based dark mode
       tailwind.config = {
         darkMode: 'class',
+        theme: {
+          extend: {},
+        }
       }
     </script>
+    
     <script>
-      // On page load or when changing themes, best to add inline in `head` to avoid FOUC.
-      // Default to dark unless light mode or a light system theme is explicitly chosen.
+      // Theme switcher logic to prevent FOUC
       if (localStorage.theme === 'light' || (localStorage.theme === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.remove('dark')
       } else {
         document.documentElement.classList.add('dark')
       }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style type="text/css">
-      /* Force dark mode colors for compatibility on all devices */
-      html.dark {
-        color-scheme: dark;
+
+    <style type="text/tailwindcss">
+      @layer base {
+        /* Force dark mode colors for compatibility on all devices */
+        html.dark {
+          color-scheme: dark;
+        }
+        
+        body {
+          @apply bg-slate-50 text-slate-950;
+          overscroll-behavior: none;
+          font-family: 'Gruppo', sans-serif;
+          font-size: 18px; /* Increased base font size for readability */
+        }
+        
+        html.dark body {
+          @apply bg-slate-950 text-slate-50;
+        }
       }
-      
-      body {
-        background-color: #f8fafc; /* slate-50 */
-        color: #0f172a; /* slate-950 */
-        overscroll-behavior: none;
-        font-family: 'Gruppo', sans-serif;
-        font-size: 18px; /* Increased base font size for readability */
-      }
-      
-      html.dark body {
-        background-color: #0f172a; /* slate-950 */
-        color: #f8fafc; /* slate-50 */
-      }
+
 
       /* Styles for the family tree connecting lines */
       .tree ul {
@@ -54,7 +59,7 @@
         display: flex;
         justify-content: center;
       }
-      
+
       /* Target the root ul specifically to remove top padding */
       .tree > ul {
         padding-top: 0;
@@ -111,7 +116,7 @@
         height: 40px;
         border-left-width: 2px;
       }
-      
+
       /* Middle children get a T-junction */
       .tree ul ul li:not(:first-child):not(:last-child)::before {
         left: 50%;
@@ -144,7 +149,7 @@
         border-right-width: 2px;
         border-top-right-radius: 1rem;
       }
-      
+
       /* --- Minimap Specific Styles --- */
       /* Remove shadows for minimap lines for clarity */
       .minimap-tree li > ul::before,
@@ -152,7 +157,7 @@
       .minimap-tree ul ul li::after {
           filter: none;
       }
-      
+
       .dark .minimap-tree li > ul::before,
       .dark .minimap-tree ul ul li::before,
       .dark .minimap-tree ul ul li::after {
