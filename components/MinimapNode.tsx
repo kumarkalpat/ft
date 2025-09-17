@@ -8,7 +8,7 @@ interface MinimapNodeProps {
 export const MinimapNode: React.FC<MinimapNodeProps> = React.memo(({ person }) => {
   return (
     // The li element's padding is crucial for the CSS connecting lines to have space
-    <li className="flex flex-col items-center relative p-[40px_1rem_0_1rem]">
+    <li className="flex flex-col items-center relative p-[20px_1rem_0_1rem]">
       {/* Container for the person and spouse nodes */}
       <div className="flex items-center gap-2">
         {/* Person representation */}
