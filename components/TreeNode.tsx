@@ -80,12 +80,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                   {person.name}
                 </p>
                 {person.alias && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate" title={person.alias}>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 italic truncate" title={person.alias}>
                     "{person.alias}"
                   </p>
                 )}
                 {person.birthDate && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
                     {person.deathDate
                       ? `${new Date(person.birthDate).getFullYear()} - ${new Date(person.deathDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
                       : `${new Date(person.birthDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
@@ -129,12 +129,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                     {person.spouse.name}
                     </p>
                     {person.spouse.alias && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate" title={person.spouse.alias}>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 italic truncate" title={person.spouse.alias}>
                         "{person.spouse.alias}"
                       </p>
                     )}
                     {person.spouse.birthDate && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
                         {person.spouse.deathDate
                           ? `${new Date(person.spouse.birthDate).getFullYear()} - ${new Date(person.spouse.deathDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
                           : `${new Date(person.spouse.birthDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
