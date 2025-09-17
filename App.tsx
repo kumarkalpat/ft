@@ -18,6 +18,7 @@ import { PersonDetails } from './components/PersonDetails';
 import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
 import { Minimap } from './components/Minimap';
+import { HelpScreen } from './components/HelpScreen';
 
 // Fallback URL for the main family data (Sheet 1).
 const FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
@@ -99,6 +100,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isHelpVisible, setIsHelpVisible] = useState(false);
   
   const [visibleNodeIds, setVisibleNodeIds] = useState<Set<string>>(new Set());
   const [spouseVisibleFor, setSpouseVisibleFor] = useState<Set<string>>(new Set());
@@ -543,6 +545,11 @@ const App: React.FC = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         }
                     </button>
+                    <button onClick={() => setIsHelpVisible(true)} title="Help" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </header>
@@ -619,6 +626,8 @@ const App: React.FC = () => {
                 peopleMap={peopleMap}
              />
         </main>
+        
+        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} />}
 
         {/* Data Source Indicator for Debugging */}
         <div className="fixed bottom-2 left-2 z-50 px-3 py-1 bg-slate-800/80 text-white text-xs rounded-full backdrop-blur-sm shadow-lg">
