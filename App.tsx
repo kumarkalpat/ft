@@ -1,6 +1,3 @@
-
-
-
 // FIX: To correctly augment the global `ImportMeta` type within a module,
 // the declaration must be wrapped in `declare global`. This prevents creating a local
 // type that shadows the global one and ensures TypeScript recognizes `import.meta.env`.
@@ -489,56 +486,56 @@ const App: React.FC = () => {
   return (
     <div className="antialiased h-screen w-screen overflow-hidden flex flex-col">
        <header className="flex-shrink-0 bg-white dark:bg-slate-800 shadow-md z-20">
-            <div className="container mx-auto px-4 py-3 grid grid-cols-[auto_1fr_auto] items-center gap-4">
-                <div className="flex items-center gap-3">
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
+                {/* Left side */}
+                <div className="flex-1 flex items-center justify-start gap-3">
                   <img src={appConfig.logoUrl} alt={`${appConfig.title} Logo`} className="h-8 w-8 object-contain" />
                   <h1 className="hidden sm:inline text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{appConfig.title}</h1>
                 </div>
                 
+                {/* Middle (Search) */}
                 <div className="flex justify-center min-w-0">
-                    <div className="flex items-center justify-center gap-4 w-full max-w-7xl">
-                        <div className="relative w-full max-w-md">
-                            <input
-                                type="text"
-                                placeholder="Search for a person..."
-                                className="w-full h-10 pl-4 pr-4 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onFocus={() => setIsSearchFocused(true)}
-                                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
-                            />
-                            {isSearchFocused && searchResults.length > 0 && (
-                                <ul className="absolute top-full mt-2 min-w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 z-30">
-                                    {searchResults.map(person => (
-                                        <li key={person.id}>
-                                            <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
-                                                <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                                                <div>
-                                                    <p className="font-semibold whitespace-nowrap text-slate-900 dark:text-white">{person.name}</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
-                                                </div>
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                        
-                        {!loading && !error && minimapViewport.contentSize.width > 0 && (
-                            <Minimap
-                                className="hidden md:flex"
-                                containerSize={minimapViewport.containerSize}
-                                contentSize={minimapViewport.contentSize}
-                                pan={minimapViewport.pan}
-                                scale={minimapViewport.scale}
-                                roots={displayedRoots}
-                                onPan={handleMinimapPan}
-                            />
+                    <div className="relative w-full max-w-md">
+                        <input
+                            type="text"
+                            placeholder="Search for a person..."
+                            className="w-full h-10 pl-4 pr-4 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} // Increased delay to allow click
+                        />
+                        {isSearchFocused && searchResults.length > 0 && (
+                            <ul className="absolute top-full mt-2 min-w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden border border-slate-200 dark:border-slate-700 z-30">
+                                {searchResults.map(person => (
+                                    <li key={person.id}>
+                                        <button onClick={() => handleNodeClick(person)} className="w-full text-left flex items-center gap-3 p-3 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                            <SecureImage name={person.name} src={person.imageUrl} alt={person.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                                            <div>
+                                                <p className="font-semibold whitespace-nowrap text-slate-900 dark:text-white">{person.name}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">{person.birthDate || ''}</p>
+                                            </div>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
                         )}
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                {/* Right side */}
+                <div className="flex-1 flex items-center justify-end gap-2">
+                    {!loading && !error && minimapViewport.contentSize.width > 0 && (
+                        <Minimap
+                            className="hidden md:flex"
+                            containerSize={minimapViewport.containerSize}
+                            contentSize={minimapViewport.contentSize}
+                            pan={minimapViewport.pan}
+                            scale={minimapViewport.scale}
+                            roots={displayedRoots}
+                            onPan={handleMinimapPan}
+                        />
+                    )}
                     <ThemeToggle />
                     <button onClick={handleClearFocus} title="Reset View" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
