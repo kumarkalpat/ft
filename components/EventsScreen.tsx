@@ -66,7 +66,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ onClose, peopleMap }
               type: 'Birthday',
               date: nextBirthday,
               daysUntil: diffDays,
-              description: '', // Remove individual birthday labels
+              description: `Turning ${ageTurning}`,
               ageTurning, // Add the calculated age
             });
           }
@@ -173,7 +173,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ onClose, peopleMap }
                     aria-current={activeTab === 'birthdays' ? 'page' : undefined}
                 >
                     Birthdays
-                    <span className="ml-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-2.5 py-1 text-xs font-bold">{birthdays.length}</span>
+                    <span className="ml-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-2.5 py-1 text-sm font-bold">{birthdays.length}</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('anniversaries')}
@@ -185,7 +185,7 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ onClose, peopleMap }
                     aria-current={activeTab === 'anniversaries' ? 'page' : undefined}
                 >
                     Anniversaries
-                    <span className="ml-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-2.5 py-1 text-xs font-bold">{anniversaries.length}</span>
+                    <span className="ml-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full px-2.5 py-1 text-sm font-bold">{anniversaries.length}</span>
                 </button>
             </nav>
         </div>
@@ -210,14 +210,15 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ onClose, peopleMap }
                               alt={event.names[0]}
                               className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                             />
-                            <div className="truncate">
-                              <p className="text-slate-800 dark:text-slate-200 text-base font-semibold truncate">{event.names[0]}</p>
+                            <div>
+                              <p className="text-slate-800 dark:text-slate-200 text-base font-semibold">{event.names[0]}</p>
+                              <p className="font-bold text-xl text-indigo-600 dark:text-indigo-400">{event.description}</p>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-2">
-                            <p className="font-semibold text-slate-900 dark:text-white">{event.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                            <p className="font-semibold text-slate-900 dark:text-white text-base">{event.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">
-                              {event.ageTurning ? `${event.ageTurning} ${getDaysUntilText(event.daysUntil).toLowerCase()}` : getDaysUntilText(event.daysUntil)}
+                              {getDaysUntilText(event.daysUntil)}
                             </p>
                           </div>
                         </li>
@@ -247,13 +248,13 @@ export const EventsScreen: React.FC<EventsScreenProps> = ({ onClose, peopleMap }
                                       />
                                   ))}
                               </div>
-                              <div className="truncate">
-                                  <p className="font-bold text-sm truncate text-rose-600 dark:text-rose-400">{event.description}</p>
-                                  <p className="text-slate-800 dark:text-slate-200 text-base truncate">{event.names.join(' & ')}</p>
+                              <div>
+                                  <p className="font-bold text-xl text-teal-600 dark:text-teal-400">{event.description}</p>
+                                  <p className="text-slate-800 dark:text-slate-200 text-base">{event.names.join(' & ')}</p>
                               </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-2">
-                              <p className="font-semibold text-slate-900 dark:text-white">{event.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                              <p className="font-semibold text-slate-900 dark:text-white text-base">{event.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                               <p className="text-sm text-slate-500 dark:text-slate-400">{getDaysUntilText(event.daysUntil)}</p>
                           </div>
                         </li>
