@@ -6,10 +6,11 @@ interface HelpScreenProps {
     title: string;
     logoUrl: string;
   };
-  dataSource: string;
+  onExportPdf: () => void;
+  isExporting: boolean;
 }
 
-const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
+const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: string; action?: React.ReactNode }> = ({ icon, title, description, action }) => (
   <div className="flex items-start gap-4">
     <div className="flex-shrink-0 w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300">
       {icon}
@@ -17,11 +18,12 @@ const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: st
     <div>
       <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
       <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+      {action && <div className="mt-2">{action}</div>}
     </div>
   </div>
 );
 
-export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, dataSource }) => {
+export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, onExportPdf, isExporting }) => {
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -110,6 +112,18 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, data
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>}
                 title="Export to PDF"
                 description="Saves a high-quality image of the current tree view as a downloadable PDF file."
+                action={
+                    <button onClick={onExportPdf} disabled={isExporting} className="inline-flex items-center gap-2 px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isExporting ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Exporting...
+                            </>
+                        ) : (
+                            'Export Now'
+                        )}
+                    </button>
+                }
               />
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>}
@@ -119,13 +133,6 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, data
             </div>
           </section>
 
-        </div>
-        
-        {/* Footer */}
-        <div className="flex-shrink-0 p-4 border-t border-slate-200 dark:border-slate-700 text-center">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Data Source: <strong>{dataSource}</strong>
-          </p>
         </div>
       </div>
     </div>

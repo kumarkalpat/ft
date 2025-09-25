@@ -1,5 +1,6 @@
 
 
+
 // FIX: To correctly augment the global `ImportMeta` type within a module,
 // the declaration must be wrapped in `declare global`. This prevents creating a local
 // type that shadows the global one and ensures TypeScript recognizes `import.meta.env`.
@@ -545,13 +546,6 @@ const App: React.FC = () => {
                     <button onClick={() => setIsEventsVisible(true)} disabled={loading || !!error} title="Upcoming Events" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </button>
-                    <button onClick={handleExportPdf} disabled={isExporting} title="Export to PDF" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
-                        {isExporting ?
-                            <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            :
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        }
-                    </button>
                     <button onClick={() => setIsHelpVisible(true)} title="Help" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -634,7 +628,7 @@ const App: React.FC = () => {
              />
         </main>
         
-        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} appConfig={appConfig} dataSource={dataSourceLabel} />}
+        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} appConfig={appConfig} onExportPdf={handleExportPdf} isExporting={isExporting} />}
         {isEventsVisible && peopleMap.size > 0 && <EventsScreen onClose={() => setIsEventsVisible(false)} peopleMap={peopleMap} />}
     </div>
   );
