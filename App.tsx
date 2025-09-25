@@ -42,38 +42,7 @@ const SHEET_URL = import.meta.env?.VITE_SHEET_URL || FALLBACK_SHEET_URL;
 const CONFIG_SHEET_URL = import.meta.env?.VITE_CONFIG_SHEET_URL || FALLBACK_CONFIG_SHEET_URL;
 const dataSourceLabel = import.meta.env?.VITE_SHEET_URL ? 'Vercel Environment Variable' : 'Fallback URL';
 
-const ThemeToggle: React.FC = () => {
-    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-
-    useEffect(() => {
-        const root = window.document.documentElement;
-        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-        root.classList.toggle('dark', isDark);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
-        const handleChange = () => {
-            if (theme === 'system') {
-                document.documentElement.classList.toggle('dark', mediaQuery.matches);
-            }
-        };
-
-        mediaQuery.addEventListener('change', handleChange);
-        return () => mediaQuery.removeEventListener('change', handleChange);
-    }, [theme]);
-    
-    const handleThemeCycle = () => {
-        setTheme(current => {
-            if (current === 'light') return 'dark';
-            if (current === 'dark') return 'system';
-            return 'light';
-        });
-    };
-
+const ThemeToggle: React.FC<{ theme: string; onCycle: () => void }> = ({ theme, onCycle }) => {
     const icons = {
         light: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
         dark: <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>,
@@ -87,7 +56,7 @@ const ThemeToggle: React.FC = () => {
     };
 
     return (
-        <button onClick={handleThemeCycle} title={tooltips[theme as keyof typeof tooltips]} className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+        <button onClick={onCycle} title={tooltips[theme as keyof typeof tooltips]} className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
             {icons[theme as keyof typeof icons]}
         </button>
     );
@@ -113,9 +82,12 @@ const App: React.FC = () => {
     title: 'Family Tree',
     logoUrl: 'https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs'
   });
+  
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
 
   const treeRef = useRef<FamilyTreeHandle>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
 
@@ -125,6 +97,36 @@ const App: React.FC = () => {
     pan: { x: 0, y: 0 },
     scale: 1,
   });
+  
+  // Theme management effects
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    root.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = () => {
+        if (theme === 'system') {
+            document.documentElement.classList.toggle('dark', mediaQuery.matches);
+        }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
+  
+  const handleThemeCycle = () => {
+    setTheme(current => {
+        if (current === 'light') return 'dark';
+        if (current === 'dark') return 'system';
+        return 'light';
+    });
+  };
 
   // Effect to fetch application configuration from Sheet 2
   useEffect(() => {
@@ -482,6 +484,28 @@ const App: React.FC = () => {
   }, [focusedPersonId, roots, peopleMap]);
 
   const isAnimating = !isInitialAnimationComplete;
+  
+  // Action handlers for the interactive help screen
+  const handleTriggerSearch = () => {
+    setIsHelpVisible(false);
+    setTimeout(() => {
+        searchInputRef.current?.focus();
+    }, 150);
+  };
+  const handleTriggerEvents = () => {
+      setIsHelpVisible(false);
+      setTimeout(() => {
+          setIsEventsVisible(true);
+      }, 150);
+  };
+  const handleTriggerTheme = () => {
+      setIsHelpVisible(false);
+      setTimeout(handleThemeCycle, 150);
+  };
+  const handleTriggerReset = () => {
+      setIsHelpVisible(false);
+      handleClearFocus();
+  };
 
   return (
     <div className="antialiased h-screen w-screen overflow-hidden flex flex-col">
@@ -497,6 +521,7 @@ const App: React.FC = () => {
                 <div className="flex justify-center min-w-0">
                     <div className="relative w-full max-w-md">
                         <input
+                            ref={searchInputRef}
                             type="text"
                             placeholder="Search for a person..."
                             className="w-full h-10 pl-4 pr-4 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -536,12 +561,19 @@ const App: React.FC = () => {
                             onPan={handleMinimapPan}
                         />
                     )}
-                    <ThemeToggle />
+                    <ThemeToggle theme={theme} onCycle={handleThemeCycle} />
                     <button onClick={handleClearFocus} title="Reset View" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
                     </button>
                     <button onClick={() => setIsEventsVisible(true)} disabled={loading || !!error} title="Upcoming Events" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </button>
+                    <button onClick={handleExportPdf} disabled={isExporting || loading || !!error} title="Export to PDF" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
+                        {isExporting ? (
+                             <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        ) : (
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        )}
                     </button>
                     <button onClick={() => setIsHelpVisible(true)} title="Help" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -625,7 +657,14 @@ const App: React.FC = () => {
              />
         </main>
         
-        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} appConfig={appConfig} onExportPdf={handleExportPdf} isExporting={isExporting} />}
+        {isHelpVisible && <HelpScreen 
+            onClose={() => setIsHelpVisible(false)} 
+            appConfig={appConfig}
+            onTriggerSearch={handleTriggerSearch}
+            onTriggerEvents={handleTriggerEvents}
+            onTriggerTheme={handleTriggerTheme}
+            onTriggerReset={handleTriggerReset}
+        />}
         {isEventsVisible && peopleMap.size > 0 && <EventsScreen onClose={() => setIsEventsVisible(false)} peopleMap={peopleMap} />}
     </div>
   );

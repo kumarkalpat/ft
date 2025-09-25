@@ -6,24 +6,43 @@ interface HelpScreenProps {
     title: string;
     logoUrl: string;
   };
-  onExportPdf: () => void;
-  isExporting: boolean;
+  onTriggerSearch: () => void;
+  onTriggerEvents: () => void;
+  onTriggerTheme: () => void;
+  onTriggerReset: () => void;
 }
 
-const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: string; action?: React.ReactNode }> = ({ icon, title, description, action }) => (
-  <div className="flex items-start gap-4">
-    <div className="flex-shrink-0 w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300">
-      {icon}
-    </div>
-    <div>
-      <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
-      <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
-      {action && <div className="mt-2">{action}</div>}
-    </div>
-  </div>
-);
+const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: string; action?: React.ReactNode; onClick?: () => void }> = ({ icon, title, description, action, onClick }) => {
+  const content = (
+    <>
+      <div className="flex-shrink-0 w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300">
+        {icon}
+      </div>
+      <div>
+        <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{description}</p>
+        {action && <div className="mt-2">{action}</div>}
+      </div>
+    </>
+  );
 
-export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, onExportPdf, isExporting }) => {
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="w-full text-left p-2 -m-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-start gap-4">
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-4">
+      {content}
+    </div>
+  );
+};
+
+
+export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, onTriggerSearch, onTriggerEvents, onTriggerTheme, onTriggerReset }) => {
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -87,6 +106,7 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, onEx
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
                 title="Search"
                 description="Quickly find any person in the tree by typing their name or alias into the search bar."
+                onClick={onTriggerSearch}
               />
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0-6V7m0 6h6m-6 0L3 7m6 6l5.447 2.724A1 1 0 0015 16.382V5.618a1 1 0 00-1.447-.894L9 7" /></svg>}
@@ -97,33 +117,24 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, onEx
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                 title="Upcoming Events"
                 description="View a list of upcoming birthdays and anniversaries for family members within the next year."
+                onClick={onTriggerEvents}
               />
               <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                 title="Theme Toggle"
                 description="Cycles between Light, Dark, and System default appearance settings for your viewing comfort."
+                onClick={onTriggerTheme}
               />
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>}
                 title="Reset View"
                 description="Clears any selection and fits the entire family tree back into the main view. Also restarts the animation."
+                onClick={onTriggerReset}
               />
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>}
                 title="Export to PDF"
                 description="Saves a high-quality image of the current tree view as a downloadable PDF file."
-                action={
-                    <button onClick={onExportPdf} disabled={isExporting} className="inline-flex items-center gap-2 px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {isExporting ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Exporting...
-                            </>
-                        ) : (
-                            'Export Now'
-                        )}
-                    </button>
-                }
               />
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>}
