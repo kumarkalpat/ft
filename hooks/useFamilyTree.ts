@@ -144,7 +144,8 @@ export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string)
         person.children.sort((a, b) => {
           if (!a.birthDate) return 1; // People without birth dates go to the end
           if (!b.birthDate) return -1;
-          return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
+          // By appending T00:00:00, we ensure the date string is parsed in the local timezone, not UTC.
+          return new Date(`${a.birthDate}T00:00:00`).getTime() - new Date(`${b.birthDate}T00:00:00`).getTime();
         });
       }
     });

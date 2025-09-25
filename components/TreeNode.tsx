@@ -15,8 +15,9 @@ interface TreeNodeProps {
 
 const getAge = (birthDate?: string, deathDate?: string): string => {
   if (!birthDate) return '';
-  const start = new Date(birthDate);
-  const end = deathDate ? new Date(deathDate) : new Date();
+  // Appending 'T00:00:00' ensures the date string is parsed in the local timezone, not UTC.
+  const start = new Date(`${birthDate}T00:00:00`);
+  const end = deathDate ? new Date(`${deathDate}T00:00:00`) : new Date();
   let age = end.getFullYear() - start.getFullYear();
   const m = end.getMonth() - start.getMonth();
   if (m < 0 || (m === 0 && end.getDate() < start.getDate())) {
@@ -87,8 +88,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                 {person.birthDate && (
                   <p className="text-sm text-slate-600 dark:text-slate-300">
                     {person.deathDate
-                      ? `${new Date(person.birthDate).getFullYear()} - ${new Date(person.deathDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
-                      : `${new Date(person.birthDate).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                      ? `${new Date(`${person.birthDate}T00:00:00`).getFullYear()} - ${new Date(`${person.deathDate}T00:00:00`).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
+                      : `${new Date(`${person.birthDate}T00:00:00`).getFullYear()} ${getAge(person.birthDate, person.deathDate)}`
                     }
                   </p>
                 )}
@@ -136,8 +137,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ person, onFocusPerson, onSho
                     {person.spouse.birthDate && (
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                         {person.spouse.deathDate
-                          ? `${new Date(person.spouse.birthDate).getFullYear()} - ${new Date(person.spouse.deathDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
-                          : `${new Date(person.spouse.birthDate).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                          ? `${new Date(`${person.spouse.birthDate}T00:00:00`).getFullYear()} - ${new Date(`${person.spouse.deathDate}T00:00:00`).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
+                          : `${new Date(`${person.spouse.birthDate}T00:00:00`).getFullYear()} ${getAge(person.spouse.birthDate, person.spouse.deathDate)}`
                         }
                     </p>
                     )}

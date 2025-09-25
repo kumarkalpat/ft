@@ -21,6 +21,7 @@ import { Person } from './types';
 import { SecureImage } from './components/SecureImage';
 import { Minimap } from './components/Minimap';
 import { HelpScreen } from './components/HelpScreen';
+import { EventsScreen } from './components/EventsScreen';
 
 // Fallback URL for the main family data (Sheet 1).
 const FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
@@ -103,6 +104,7 @@ const App: React.FC = () => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isHelpVisible, setIsHelpVisible] = useState(false);
+  const [isEventsVisible, setIsEventsVisible] = useState(false);
   
   const [visibleNodeIds, setVisibleNodeIds] = useState<Set<string>>(new Set());
   const [spouseVisibleFor, setSpouseVisibleFor] = useState<Set<string>>(new Set());
@@ -171,7 +173,7 @@ const App: React.FC = () => {
     };
 
     loadConfig();
-  }, [CONFIG_SHEET_URL]);
+  }, []);
 
   // Effect to update the document title and favicon when config changes
   useEffect(() => {
@@ -540,6 +542,9 @@ const App: React.FC = () => {
                     <button onClick={handleClearFocus} title="Reset View" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" /></svg>
                     </button>
+                    <button onClick={() => setIsEventsVisible(true)} disabled={loading || !!error} title="Upcoming Events" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </button>
                     <button onClick={handleExportPdf} disabled={isExporting} title="Export to PDF" className="p-2 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50">
                         {isExporting ?
                             <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -630,6 +635,7 @@ const App: React.FC = () => {
         </main>
         
         {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} appConfig={appConfig} dataSource={dataSourceLabel} />}
+        {isEventsVisible && peopleMap.size > 0 && <EventsScreen onClose={() => setIsEventsVisible(false)} peopleMap={peopleMap} />}
     </div>
   );
 };

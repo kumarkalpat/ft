@@ -12,8 +12,9 @@ interface PersonDetailsProps {
 
 const getAge = (birthDate?: string, deathDate?: string): string => {
   if (!birthDate) return '';
-  const start = new Date(birthDate);
-  const end = deathDate ? new Date(deathDate) : new Date();
+  // Appending 'T00:00:00' ensures the date string is parsed in the local timezone, not UTC.
+  const start = new Date(`${birthDate}T00:00:00`);
+  const end = deathDate ? new Date(`${deathDate}T00:00:00`) : new Date();
   let age = end.getFullYear() - start.getFullYear();
   const m = end.getMonth() - start.getMonth();
   if (m < 0 || (m === 0 && end.getDate() < start.getDate())) {

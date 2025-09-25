@@ -24,18 +24,9 @@ const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: st
 export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, dataSource }) => {
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.2s ease-out;
-        }
-      `}</style>
       <div 
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()} // Prevent click from bubbling to the backdrop
@@ -88,7 +79,7 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, data
           </section>
 
           <section>
-            <h3 className="text-lg font-semibold mb-4 text-indigo-600 dark:text-indigo-400">Header Controls</h3>
+            <h3 className="text-lg font-semibold mb-4 text-indigo-600 dark:text-indigo-400">Features & Controls</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
@@ -99,6 +90,11 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, data
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0-6V7m0 6h6m-6 0L3 7m6 6l5.447 2.724A1 1 0 0015 16.382V5.618a1 1 0 00-1.447-.894L9 7" /></svg>}
                 title="Minimap"
                 description="This small preview shows the entire tree. Click or drag within it to quickly navigate to different sections."
+              />
+              <HelpItem 
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+                title="Upcoming Events"
+                description="View a list of upcoming birthdays and anniversaries for family members within the next year."
               />
               <HelpItem 
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
@@ -114,6 +110,11 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, data
                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>}
                 title="Export to PDF"
                 description="Saves a high-quality image of the current tree view as a downloadable PDF file."
+              />
+               <HelpItem 
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>}
+                title="Skip Animation"
+                description="Bypass the introductory animation on page load to see the entire tree immediately."
               />
             </div>
           </section>

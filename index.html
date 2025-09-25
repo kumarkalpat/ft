@@ -54,6 +54,43 @@
         @apply bg-slate-950 text-slate-50;
       }
 
+      /* Subtle scrollbar styling */
+      /* For Webkit browsers (Chrome, Safari, Edge) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* slate-300 */
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8; /* slate-400 */
+      }
+
+      html.dark ::-webkit-scrollbar-thumb {
+        background-color: #334155; /* slate-700 */
+      }
+      
+      html.dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #475569; /* slate-600 */
+      }
+
+      /* For Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 transparent; /* slate-400 thumb, transparent track */
+      }
+      
+      html.dark * {
+        scrollbar-color: #475569 transparent; /* slate-600 thumb, transparent track */
+      }
 
       /* Styles for the family tree connecting lines */
       .tree ul {
