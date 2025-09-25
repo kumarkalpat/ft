@@ -629,12 +629,7 @@ const App: React.FC = () => {
              />
         </main>
         
-        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} />}
-
-        {/* Data Source Indicator for Debugging */}
-        <div className="fixed bottom-2 left-2 z-50 px-3 py-1 bg-slate-800/80 text-white text-xs rounded-full backdrop-blur-sm shadow-lg">
-           Data Source: <strong>{dataSourceLabel}</strong>
-       </div>
+        {isHelpVisible && <HelpScreen onClose={() => setIsHelpVisible(false)} appConfig={appConfig} dataSource={dataSourceLabel} />}
     </div>
   );
 };

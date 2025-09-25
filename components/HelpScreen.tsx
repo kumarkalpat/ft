@@ -2,6 +2,11 @@ import React from 'react';
 
 interface HelpScreenProps {
   onClose: () => void;
+  appConfig: {
+    title: string;
+    logoUrl: string;
+  };
+  dataSource: string;
 }
 
 const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
@@ -16,7 +21,7 @@ const HelpItem: React.FC<{ icon: React.ReactNode; title: string; description: st
   </div>
 );
 
-export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose }) => {
+export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose, appConfig, dataSource }) => {
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in"
@@ -37,7 +42,13 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose }) => {
       >
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Quick Guide</h2>
+          <div className="flex items-center gap-3">
+            <img src={appConfig.logoUrl} alt={`${appConfig.title} Logo`} className="h-8 w-8 object-contain" />
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{appConfig.title}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Quick Guide</p>
+            </div>
+          </div>
           <button 
             onClick={onClose} 
             className="w-8 h-8 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center text-xl"
@@ -107,6 +118,13 @@ export const HelpScreen: React.FC<HelpScreenProps> = ({ onClose }) => {
             </div>
           </section>
 
+        </div>
+        
+        {/* Footer */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-200 dark:border-slate-700 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Data Source: <strong>{dataSource}</strong>
+          </p>
         </div>
       </div>
     </div>
