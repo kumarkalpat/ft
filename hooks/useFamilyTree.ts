@@ -23,6 +23,15 @@ export const useFamilyTree = (sheetUrl: string | undefined, fallbackCsv: string)
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // If the sheetUrl is explicitly undefined, it means we shouldn't fetch any data yet.
+    // This is used to wait for an action like authentication before loading the tree.
+    if (sheetUrl === undefined) {
+      setPeople([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const processData = (csvData: string) => {
         try {
           const parsed = Papa.parse(csvData, {

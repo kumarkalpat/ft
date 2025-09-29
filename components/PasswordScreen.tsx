@@ -28,60 +28,44 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess, corre
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900">
-      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-slate-800">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-3">
-            <img src="https://lh3.googleusercontent.com/d/1YVlP-a3u3dwxd3BsEGoO4LQHX6wDMXfs" alt="Kalpats Family Tree Logo" className="h-10 w-10 object-contain" />
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Kalpats Family Tree</h1>
-          </div>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Please enter your credentials to continue.
-          </p>
-        </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="id-input" className="sr-only">
-              ID
-            </label>
-            <input
-              id="id-input"
-              name="id"
-              type="text"
-              required
-              className="w-full px-3 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
-              placeholder="ID"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
-              autoFocus
-            />
-          </div>
+    <div className="flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900 px-4">
+      <form className="w-full max-w-md" onSubmit={handleSubmit}>
+        <div className="flex items-stretch justify-center gap-2">
+          <input
+            id="id-input"
+            name="id"
+            type="text"
+            required
+            className="flex-grow w-full px-4 h-12 text-slate-900 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg dark:bg-slate-800 dark:border-slate-700 dark:placeholder-slate-400 dark:text-white"
+            placeholder="ID"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            autoFocus
+          />
           {hasPassword && (
-            <div>
-              <label htmlFor="password-input" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password-input"
-                name="password"
-                type="password"
-                required
-                className="w-full px-3 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <input
+              id="password-input"
+              name="password"
+              type="password"
+              required
+              className="flex-grow w-full px-4 h-12 text-slate-900 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg dark:bg-slate-800 dark:border-slate-700 dark:placeholder-slate-400 dark:text-white"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           )}
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            aria-label="Enter"
+            className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
-            Enter
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
           </button>
-        </form>
-      </div>
+        </div>
+        {error && <p className="text-sm text-red-500 text-center pt-2">{error}</p>}
+      </form>
     </div>
   );
 };

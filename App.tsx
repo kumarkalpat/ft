@@ -98,7 +98,10 @@ const App: React.FC = () => {
   const treeRef = useRef<FamilyTreeHandle>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { roots, peopleMap, loading, error } = useFamilyTree(SHEET_URL, fallbackData);
+  const { roots, peopleMap, loading, error } = useFamilyTree(
+    isAuthenticated ? SHEET_URL : undefined, 
+    fallbackData
+  );
 
   const [minimapViewport, setMinimapViewport] = useState<MinimapViewport>({
     containerSize: { width: 0, height: 0 },
