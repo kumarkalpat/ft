@@ -6,6 +6,7 @@ declare global {
     readonly env: {
       readonly VITE_SHEET_URL?: string;
       readonly VITE_CONFIG_SHEET_URL?: string;
+      readonly VITE_ID_PWD?: string;
     };
   }
 }
@@ -20,6 +21,7 @@ import { SecureImage } from './components/SecureImage';
 import { Minimap } from './components/Minimap';
 import { HelpScreen } from './components/HelpScreen';
 import { EventsScreen } from './components/EventsScreen';
+import { PasswordScreen } from './components/PasswordScreen';
 
 // Fallback URL for the main family data (Sheet 1).
 const FALLBACK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_yf7sbtXO20OfLxqeCHwVa54D2-FOEY8MZXIVbbt3oqoh9qIEpFM4mmisJ8r4mhtASlGZIKfsK75F/pub?gid=0&single=true&output=csv';
@@ -41,6 +43,12 @@ const fallbackConfigData = `appTitle,logoUrl\n"Kalpats Family Tree","https://lh3
 const SHEET_URL = import.meta.env?.VITE_SHEET_URL || FALLBACK_SHEET_URL;
 const CONFIG_SHEET_URL = import.meta.env?.VITE_CONFIG_SHEET_URL || FALLBACK_CONFIG_SHEET_URL;
 const dataSourceLabel = import.meta.env?.VITE_SHEET_URL ? 'Vercel Environment Variable' : 'Fallback URL';
+
+// This logic reads credentials from environment variables or uses a fallback.
+const ID_PWD_STRING = import.meta.env?.VITE_ID_PWD || 'ai;123';
+const idPwdArray = ID_PWD_STRING.split(';');
+const correctId = idPwdArray[0];
+const correctPassword = idPwdArray.length > 1 ? idPwdArray[1] : undefined;
 
 const ThemeToggle: React.FC<{ theme: string; onCycle: () => void }> = ({ theme, onCycle }) => {
     const icons = {
@@ -64,6 +72,7 @@ const ThemeToggle: React.FC<{ theme: string; onCycle: () => void }> = ({ theme, 
 
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [focusedPersonId, setFocusedPersonId] = useState<string | null>(null);
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
@@ -506,6 +515,14 @@ const App: React.FC = () => {
       setIsHelpVisible(false);
       handleClearFocus();
   };
+
+  if (!isAuthenticated) {
+    return <PasswordScreen 
+      onSuccess={() => setIsAuthenticated(true)} 
+      correctId={correctId}
+      correctPassword={correctPassword}
+    />;
+  }
 
   return (
     <div className="antialiased h-screen w-screen overflow-hidden flex flex-col">

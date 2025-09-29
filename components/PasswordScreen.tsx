@@ -2,21 +2,27 @@ import React, { useState } from 'react';
 
 interface PasswordScreenProps {
   onSuccess: () => void;
+  correctId: string;
+  correctPassword?: string;
 }
 
-export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess }) => {
+export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess, correctId, correctPassword }) => {
+  const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const correctPassword = 'kni';
+  const hasPassword = correctPassword !== undefined;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === correctPassword) {
+    const isIdCorrect = id.trim().toLowerCase() === correctId.toLowerCase();
+    const isPasswordCorrect = !hasPassword || password === correctPassword;
+
+    if (isIdCorrect && isPasswordCorrect) {
       setError('');
       onSuccess();
     } else {
-      setError('Incorrect password. Please try again.');
+      setError('Incorrect ID or password. Please try again.');
       setPassword('');
     }
   };
@@ -30,26 +36,43 @@ export const PasswordScreen: React.FC<PasswordScreenProps> = ({ onSuccess }) => 
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Kalpats Family Tree</h1>
           </div>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Please enter the password to continue.
+            Please enter your credentials to continue.
           </p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="password-input" className="sr-only">
-              Password
+            <label htmlFor="id-input" className="sr-only">
+              ID
             </label>
             <input
-              id="password-input"
-              name="password"
-              type="password"
+              id="id-input"
+              name="id"
+              type="text"
               required
               className="w-full px-3 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="ID"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
               autoFocus
             />
           </div>
+          {hasPassword && (
+            <div>
+              <label htmlFor="password-input" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password-input"
+                name="password"
+                type="password"
+                required
+                className="w-full px-3 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          )}
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
           <button
             type="submit"
